@@ -1,0 +1,18 @@
+{% block form_oauth_login %}
+    <div class="login-page" style="width: 360px;padding: 8% 0 0;margin: auto;">
+        <div class="form"
+             style="position: relative; z-index: 1; background: #FFFFFF; max-width: 360px; margin: 0 auto 100px; padding: 45px; text-align: center; box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24);">
+            {% if login_error %}
+                <div>{{ login_error }}</div>
+            {% endif %}
+            <form class="login-form" method="post" action="{{ path('customer.oauth.authorize.check') }}">
+                <input type="text" name="username" placeholder="username"/>
+                <input type="password" name="password" placeholder="password"/>
+                <input type="hidden" name="client_id" value="{{ clientId }}"/>
+                <input type="hidden" name="state" value="{{ state }}"/>
+                <input type="hidden" name="redirect_uri" value="{{ redirectUri }}"/>
+                <input type="submit" value="login"/>
+            </form>
+        </div>
+    </div>
+{% endblock %}

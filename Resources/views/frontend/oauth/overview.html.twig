@@ -1,0 +1,31 @@
+{% sw_extends '@Storefront/frontend/index/index.html.twig' %}
+
+{# Account Sidebar #}
+{% block frontend_index_content_left %}
+    {% block frontend_account_sidebar %}
+        {% sw_include '@Storefront/frontend/account/sidebar.html.twig' %}
+    {% endblock %}
+{% endblock %}
+
+{# Account Main Content #}
+{% block frontend_index_content %}
+    <div class="content account--content">
+        <div class="oauth__overview">
+            <div class="oauth__overview-content">
+                <div class="oauth__overview-content-header"></div>
+                <div class="oauth__overview-content-body">
+                    {% for token in data %}
+                        <div class="content-row">
+                            {{ dump(token) }}
+                        </div>
+                    {% else %}
+                        <div class="content-row">
+                            Keine Zeilen
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="oauth__overview-content-pagination content-pagination"></div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

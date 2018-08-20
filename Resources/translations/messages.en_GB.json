@@ -1,0 +1,7 @@
+{
+  "frontend": {
+    "oauth": {
+      "ClientOverview": "Client overview"
+    }
+  }
+}
