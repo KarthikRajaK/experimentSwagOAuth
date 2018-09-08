@@ -14,12 +14,12 @@ class OAuthRefreshTokenStruct extends Entity
     /**
      * @var string
      */
-    protected $clientId;
+    protected $integrationId;
 
     /**
      * @var string
      */
-    protected $customerId;
+    protected $contextToken;
 
     /**
      * @var null|\DateTime
@@ -45,33 +45,33 @@ class OAuthRefreshTokenStruct extends Entity
     /**
      * @return string
      */
-    public function getClientId(): string
+    public function getIntegrationId(): string
     {
-        return $this->clientId;
+        return $this->integrationId;
     }
 
     /**
-     * @param string $clientId
+     * @param string $integrationId
      */
-    public function setClientId(string $clientId): void
+    public function setIntegrationId(string $integrationId): void
     {
-        $this->clientId = $clientId;
+        $this->integrationId = $integrationId;
     }
 
     /**
      * @return string
      */
-    public function getCustomerId(): string
+    public function getContextToken(): string
     {
-        return $this->customerId;
+        return $this->contextToken;
     }
 
     /**
      * @param string $customerId
      */
-    public function setCustomerId(string $customerId): void
+    public function setContextToken(string $contextToken): void
     {
-        $this->customerId = $customerId;
+        $this->contextToken = $contextToken;
     }
 
     /**

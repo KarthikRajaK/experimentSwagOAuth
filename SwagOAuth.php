@@ -3,12 +3,12 @@
 namespace SwagOAuth;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
 use Shopware\Core\Framework\Plugin\Context\InstallContext;
 use Shopware\Core\Framework\Plugin\Context\UninstallContext;
 use Shopware\Core\Framework\Plugin;
 use SwagOAuth\OAuth\Data\OAuthAccessTokenDefinition;
 use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeDefinition;
-use SwagOAuth\OAuth\Data\OAuthClientDefinition;
 use SwagOAuth\OAuth\Data\OAuthRefreshTokenDefinition;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -25,22 +25,29 @@ class SwagOAuth extends Plugin
 
     public function install(InstallContext $context)
     {
-        parent::install($context);
+        /** @var Connection $connection */
+        $connection = $this->container->get(Connection::class);
+        $sql = file_get_contents($this->getPath() . '/schema.sql');
 
-        $this->removeTables();
-
-        /** @var Connection $dbal */
-        $dbal = $this->container->get('Doctrine\DBAL\Connection');
-        $dbal->exec(OAuthClientDefinition::getSQLDefinition());
-        $dbal->exec(OAuthRefreshTokenDefinition::getSQLDefinition());
-        $dbal->exec(OAuthAuthorizationCodeDefinition::getSQLDefinition());
-        $dbal->exec(OAuthAccessTokenDefinition::getSQLDefinition());
+        $connection->beginTransaction();
+        try {
+            $connection->executeUpdate($sql);
+        } catch (DBALException $e) {
+            $connection->rollBack();
+            throw $e;
+        }
     }
 
     public function uninstall(UninstallContext $context)
     {
-        parent::uninstall($context);
+        if ($context->keepUserData()) {
+            parent::uninstall($context);
+
+            return;
+        }
+
         $this->removeTables();
+        parent::uninstall($context);
     }
 
     private function removeTables()
@@ -50,6 +57,5 @@ class SwagOAuth extends Plugin
         $dbal->exec('DROP TABLE IF EXISTS `' . OAuthAccessTokenDefinition::getEntityName() .'`;');
         $dbal->exec('DROP TABLE IF EXISTS `' . OAuthAuthorizationCodeDefinition::getEntityName() .'`;');
         $dbal->exec('DROP TABLE IF EXISTS `' . OAuthRefreshTokenDefinition::getEntityName() .'`;');
-        $dbal->exec('DROP TABLE IF EXISTS `' . OAuthClientDefinition::getEntityName() .'`;');
     }
 }

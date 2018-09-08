@@ -8,9 +8,9 @@
             <form class="login-form" method="post" action="{{ path('customer.oauth.authorize.check') }}">
                 <input type="text" name="username" placeholder="username"/>
                 <input type="password" name="password" placeholder="password"/>
-                <input type="hidden" name="client_id" value="{{ clientId }}"/>
+                <input type="hidden" name="integrationId" value="{{ integrationId }}"/>
                 <input type="hidden" name="state" value="{{ state }}"/>
-                <input type="hidden" name="redirect_uri" value="{{ redirectUri }}"/>
+                <input type="hidden" name="redirectUri" value="{{ redirectUri }}"/>
                 <input type="submit" value="login"/>
             </form>
         </div>

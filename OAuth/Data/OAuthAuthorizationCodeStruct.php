@@ -3,6 +3,7 @@
 namespace SwagOAuth\OAuth\Data;
 
 use Shopware\Core\Framework\ORM\Entity;
+use Shopware\Core\System\Integration\IntegrationStruct;
 
 class OAuthAuthorizationCodeStruct extends Entity
 {
@@ -14,7 +15,7 @@ class OAuthAuthorizationCodeStruct extends Entity
     /**
      * @var string
      */
-    protected $clientId;
+    protected $integrationId;
 
     /**
      * @var string|null
@@ -37,14 +38,14 @@ class OAuthAuthorizationCodeStruct extends Entity
     protected $token;
 
     /**
-     * @var OAuthClientStruct|null
+     * @var IntegrationStruct|null
      */
-    protected $client;
+    protected $integration;
 
     /**
      * @var string
      */
-    protected $swXContextToken;
+    protected $contextToken;
 
     /**
      * @return string
@@ -65,17 +66,17 @@ class OAuthAuthorizationCodeStruct extends Entity
     /**
      * @return string
      */
-    public function getClientId(): string
+    public function getIntegrationId(): string
     {
-        return $this->clientId;
+        return $this->integrationId;
     }
 
     /**
-     * @param string $clientId
+     * @param string $integrationId
      */
-    public function setClientId(string $clientId): void
+    public function setIntegrationId(string $integrationId): void
     {
-        $this->clientId = $clientId;
+        $this->integrationId = $integrationId;
     }
 
     /**
@@ -143,34 +144,34 @@ class OAuthAuthorizationCodeStruct extends Entity
     }
 
     /**
-     * @return null|OAuthClientStruct
+     * @return null|IntegrationStruct
      */
-    public function getClient(): ?OAuthClientStruct
+    public function getIntegration(): ?IntegrationStruct
     {
-        return $this->client;
+        return $this->integration;
     }
 
     /**
-     * @param null|OAuthClientStruct $client
+     * @param null|IntegrationStruct $client
      */
-    public function setClient(?OAuthClientStruct $client): void
+    public function setIntegration(?IntegrationStruct $client): void
     {
-        $this->client = $client;
+        $this->integration = $client;
     }
 
     /**
      * @return string
      */
-    public function getSwXContextToken(): string
+    public function getContextToken(): string
     {
-        return $this->swXContextToken;
+        return $this->contextToken;
     }
 
     /**
-     * @param string $swXContextToken
+     * @param string $contextToken
      */
-    public function setSwXContextToken(string $swXContextToken): void
+    public function setContextToken(string $contextToken): void
     {
-        $this->swXContextToken = $swXContextToken;
+        $this->contextToken = $contextToken;
     }
 }

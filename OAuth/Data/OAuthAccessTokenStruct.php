@@ -9,7 +9,7 @@ class OAuthAccessTokenStruct extends Entity
     /**
      * @var string
      */
-    protected $customerId;
+    protected $contextToken;
 
     /**
      * @var string
@@ -22,19 +22,24 @@ class OAuthAccessTokenStruct extends Entity
     protected $expires;
 
     /**
+     * @var string
+     */
+    protected $xSwAccessKey;
+
+    /**
      * @return string
      */
-    public function getCustomerId(): string
+    public function getContextToken(): string
     {
-        return $this->customerId;
+        return $this->contextToken;
     }
 
     /**
      * @param string $customerId
      */
-    public function setCustomerId(string $customerId): void
+    public function setContextToken(string $contextToken): void
     {
-        $this->customerId = $customerId;
+        $this->contextToken = $contextToken;
     }
 
     /**
@@ -67,5 +72,21 @@ class OAuthAccessTokenStruct extends Entity
     public function getExpires(): \DateTime
     {
         return $this->expires;
+    }
+
+    /**
+     * @return string
+     */
+    public function getXSwAccessKey(): string
+    {
+        return $this->xSwAccessKey;
+    }
+
+    /**
+     * @param string $xSwAccessKey
+     */
+    public function setXSwAccessKey(string $xSwAccessKey): void
+    {
+        $this->xSwAccessKey = $xSwAccessKey;
     }
 }
