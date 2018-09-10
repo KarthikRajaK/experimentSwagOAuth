@@ -18,6 +18,9 @@ class TokenRequest extends Struct
     /** @var string */
     protected $code;
 
+    /** @var string */
+    protected $refresh_token;
+
     public function getClientId(): string
     {
         return $this->client_id;
@@ -56,5 +59,15 @@ class TokenRequest extends Struct
     public function setCode(string $code): void
     {
         $this->code = $code;
+    }
+
+    public function getRefreshToken(): string
+    {
+        return $this->refresh_token;
+    }
+
+    public function setRefreshToken(string $refreshToken): void
+    {
+        $this->refresh_token = $refreshToken;
     }
 }

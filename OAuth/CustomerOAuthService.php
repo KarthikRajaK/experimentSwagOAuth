@@ -46,20 +46,6 @@ class CustomerOAuthService
         $this->JWTFactory = $JWTFactory;
     }
 
-    public function getIntegrationByAccessKey(CheckoutContext $checkoutContext, string $accessKey): IntegrationStruct
-    {
-        $criteria = new Criteria();
-        $criteria->addFilter(new MatchQuery('integration.accessKey', $accessKey));
-
-        /** @var IntegrationCollection $integrations */
-        $integrations = $this->integrationRepository->search($criteria, $checkoutContext->getContext());
-
-        /** @var IntegrationStruct $integration */
-        $integration = $integrations->first();
-
-        return $integration;
-    }
-
     public function generateRedirectUri(string $code, AuthorizeRequest $authorizeRequest): string
     {
         $responseData = [
@@ -89,6 +75,48 @@ class CustomerOAuthService
         ];
 
         $this->oauthAuthCodeRepository->create([$data], $checkoutContext->getContext());
+    }
+
+    public function isClientValid(TokenRequest $tokenRequest, CheckoutContext $context): bool
+    {
+        $integration = $this->getIntegrationByAccessKey($context, $tokenRequest->getClientId());
+
+        return $integration
+            && password_verify($tokenRequest->getClientSecret(), $integration->getSecretAccessKey());
+    }
+
+    public function getIntegrationByAccessKey(CheckoutContext $checkoutContext, string $accessKey): ?IntegrationStruct
+    {
+        $criteria = new Criteria();
+        $criteria->addFilter(new MatchQuery('integration.accessKey', $accessKey));
+
+        /** @var IntegrationCollection $integrations */
+        $integrations = $this->integrationRepository->search($criteria, $checkoutContext->getContext());
+
+        /** @var ?IntegrationStruct $integration */
+        $integration = $integrations->first();
+
+        return $integration;
+    }
+
+    /**
+     * @return [OAuthAccessTokenStruct, OAuthRefreshTokenStruct]
+     */
+    public function generateTokenAuthCode(
+        CheckoutContext $checkoutContext,
+        TokenRequest $tokenRequest
+    ): array {
+        $authCode = $this->getAuthCode($checkoutContext, $tokenRequest);
+        $refreshToken = $this->createRefreshToken($checkoutContext, $authCode);
+        $this->linkRefreshTokenAuthCode($checkoutContext, $authCode, $refreshToken);
+
+        return [
+            $this->createAccessToken(
+                $checkoutContext,
+                $authCode->getContextToken()
+            ),
+            $refreshToken,
+        ];
     }
 
     public function getAuthCode(
@@ -141,9 +169,11 @@ class CustomerOAuthService
 
     public function createAccessToken(
         CheckoutContext $checkoutContext,
-        \DateTime $expires,
         string $contextToken
     ): OAuthAccessTokenStruct {
+        $expires = new \DateTime();
+        $expires->modify('+360 second');
+
         $accessToken = new OAuthAccessTokenStruct();
         $accessToken->setId(Uuid::uuid4()->getHex());
         $accessToken->setExpires($expires);
@@ -151,11 +181,24 @@ class CustomerOAuthService
         $accessToken->setXSwAccessKey($checkoutContext->getSalesChannel()->getAccessKey());
 
         $accessTokenString =
-            $this->JWTFactory->generateToken($accessToken, $checkoutContext->getContext(), 3600);
+            $this->JWTFactory->generateToken($accessToken, $checkoutContext->getContext(), 360);
         $accessToken->setAccessToken($accessTokenString);
 
         $this->oauthAccessTokenRepository->create([$accessToken->jsonSerialize()], $checkoutContext->getContext());
 
         return $accessToken;
+    }
+
+    public function generateTokenRefreshToken(
+        CheckoutContext $checkoutContext,
+        TokenRequest $tokenRequest
+    ): OAuthAccessTokenStruct {
+        $criteria = new Criteria();
+        $criteria->addFilter(new MatchQuery('swag_oauth_refresh_token.refreshToken', $tokenRequest->getRefreshToken()));
+
+        /** @var OAuthRefreshTokenStruct $refreshToken */
+        $refreshToken = $this->oauthRefreshTokenRepository->search($criteria, $checkoutContext->getContext())->first();
+
+        return $this->createAccessToken($checkoutContext, $refreshToken->getContextToken());
     }
 }

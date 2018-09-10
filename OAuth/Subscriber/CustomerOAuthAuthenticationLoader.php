@@ -2,6 +2,7 @@
 
 namespace SwagOAuth\OAuth\Subscriber;
 
+use Monolog\Logger;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\ORM\Read\ReadCriteria;
 use Shopware\Core\Framework\ORM\RepositoryInterface;

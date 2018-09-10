@@ -7,6 +7,8 @@ use Shopware\Core\Framework\Struct\Uuid;
 use Shopware\Storefront\Controller\StorefrontController;
 use Shopware\Storefront\Page\Account\AccountService;
 use SwagOAuth\OAuth\CustomerOAuthService;
+use SwagOAuth\OAuth\Data\OAuthAccessTokenStruct;
+use SwagOAuth\OAuth\Data\OAuthRefreshTokenStruct;
 use SwagOAuth\OAuth\Request\AuthorizeRequest;
 use SwagOAuth\OAuth\Request\TokenRequest;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -48,12 +50,7 @@ class OAuthController extends StorefrontController
         $integration = $this->customerOAuthService->getIntegrationByAccessKey($checkoutContext, $clientId);
 
         if (!$integration) {
-            $data = [
-                'error' => 'unauthorized_client',
-                'error_description' => 'the client id is unknown',
-            ];
-
-            $callbackUrl = sprintf('%s?%s', $redirectUri, http_build_query($data));
+            $callbackUrl = $this->buildErrorUrl($redirectUri, 'unauthorized_client', 'the client id is unknown');
 
             return $this->redirect($callbackUrl);
         }
@@ -101,28 +98,57 @@ class OAuthController extends StorefrontController
     public function generateToken(Request $request, CheckoutContext $checkoutContext): Response
     {
         $tokenRequest = (new TokenRequest())->assign($request->request->all());
+        $tokenRequest->setClientId($request->headers->get('php-auth-user'));
+        $tokenRequest->setClientSecret($request->headers->get('php-auth-pw'));
 
-        $authCode = $this->customerOAuthService->getAuthCode($checkoutContext, $tokenRequest);
-        $refreshToken = $this->customerOAuthService->createRefreshToken($checkoutContext, $authCode);
-        $this->customerOAuthService->linkRefreshTokenAuthCode($checkoutContext, $authCode, $refreshToken);
+        if (!$this->customerOAuthService->isClientValid($tokenRequest, $checkoutContext))
+        {
+            return new JsonResponse(
+                [
+                    'error' => 'unauthorized_client',
+                    'error_description' =>  'the client id is unknown',
+                ]
+            );
+        }
 
-        $expires = new \DateTime();
-        $expires->modify('+3600 second');
-
-        $accessToken = $this->customerOAuthService->createAccessToken(
-            $checkoutContext, $expires, $authCode->getContextToken()
-        );
+        switch (true) {
+            case $tokenRequest->getGrantType() === 'authorization_code':
+                /** @var OAuthAccessTokenStruct $accessToken */
+                list($accessToken, $refreshToken) = $this->customerOAuthService->generateTokenAuthCode($checkoutContext, $tokenRequest);
+                break;
+            case $tokenRequest->getGrantType() === 'refresh_token':
+                $accessToken = $this->customerOAuthService->generateTokenRefreshToken($checkoutContext, $tokenRequest);
+                break;
+            default:
+                return new JsonResponse(
+                    [
+                        'error' => 'invalid_request',
+                        'error_description' =>  'the grant type is unknown',
+                    ]
+                );
+        }
 
         $data = [
             'token_type' => 'Bearer',
-            'expires_in' => '3600',
-            'expires_on' => $expires->getTimestamp(),
+            'expires_in' => '360',
+            'expires_on' => $accessToken->getExpires()->getTimestamp(),
             'access_token' => $accessToken->getAccessToken(),
-            'refresh_token' => $refreshToken->getRefreshToken(),
         ];
 
-        $response = new JsonResponse($data);
+        if (isset($refreshToken)) {
+            /** @var OAuthRefreshTokenStruct $refreshToken */
+            $data['refresh_token'] = $refreshToken->getRefreshToken();
+        }
 
-        return $response;
+        return new JsonResponse($data);
+    }
+
+    private function buildErrorUrl(string $redirectUrl, string $error, string $errorDescription): string
+    {
+        $data = [
+            'error' => $error,
+            'error_description' => $errorDescription,
+        ];
+        return sprintf('%s?%s', $redirectUrl, http_build_query($data));
     }
 }
