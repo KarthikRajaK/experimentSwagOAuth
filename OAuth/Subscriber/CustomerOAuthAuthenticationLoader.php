@@ -8,7 +8,9 @@ use Shopware\Core\Framework\ORM\Read\ReadCriteria;
 use Shopware\Core\Framework\ORM\RepositoryInterface;
 use Shopware\Core\PlatformRequest;
 use SwagOAuth\OAuth\Data\OAuthAccessTokenStruct;
-use SwagOAuth\OAuth\InvalidOAuthTokenException;
+use SwagOAuth\OAuth\Exception\InvalidOAuthTokenException;
+use SwagOAuth\OAuth\Exception\OAuthException;
+use SwagOAuth\OAuth\Exception\OAuthInvalidRequestException;
 use SwagOAuth\OAuth\JWTFactory;
 use SwagOAuth\OAuth\Data\TokenStruct;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -21,14 +23,10 @@ class CustomerOAuthAuthenticationLoader implements EventSubscriberInterface
     const HEADER_AUTHORIZATION = 'Authorization';
     const ROUTE_PREFIX = '/storefront-api/';
 
-    /**
-     * @var RepositoryInterface
-     */
+    /** @var RepositoryInterface */
     private $oauthAccessTokenRepository;
 
-    /**
-     * @var JWTFactory
-     */
+    /** @var JWTFactory */
     private $JWTFactory;
 
     public function __construct(
@@ -39,28 +37,22 @@ class CustomerOAuthAuthenticationLoader implements EventSubscriberInterface
         $this->JWTFactory = $JWTFactory;
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             KernelEvents::REQUEST => ['validateRequest', 256],
         ];
     }
 
-    public function validateRequest(GetResponseEvent $event)
+    public function validateRequest(GetResponseEvent $event): void
     {
         $request = $event->getRequest();
 
-        if (!$this->isCustomerOAuthRequest($request)) {
-            return;
-        }
-
-        $token = $this->extractToken($request);
-
-        if (!$token || $token->isExpired()) {
-            return;
-        }
-
-        if (!$this->isValidAccessToken($token)) {
+        try {
+            $this->checkCustomerOAuthRequest($request);
+            $token = $this->extractToken($request);
+            $this->checkValidAccessToken($token);
+        } catch (OAuthException $oAuthException) {
             return;
         }
 
@@ -68,27 +60,39 @@ class CustomerOAuthAuthenticationLoader implements EventSubscriberInterface
         $request->headers->set(PlatformRequest::HEADER_CONTEXT_TOKEN, $token->getContextToken());
     }
 
-    protected function isCustomerOAuthRequest(Request $request): bool
+    /**
+     * @throws OAuthInvalidRequestException
+     */
+    protected function checkCustomerOAuthRequest(Request $request): void
     {
-        return !$request->headers->has(PlatformRequest::HEADER_ACCESS_KEY)
-            && !$request->headers->has(PlatformRequest::HEADER_CONTEXT_TOKEN)
-            && $request->headers->has(self::HEADER_AUTHORIZATION)
-            && stripos($request->getPathInfo(), self::ROUTE_PREFIX) === 0;
-    }
-
-    protected function extractToken(Request $request): ?TokenStruct
-    {
-        $authorization = $request->headers->get(self::HEADER_AUTHORIZATION);
-        $authorization = substr($authorization, 7);
-        try {
-            return $this->JWTFactory->parseToken($authorization);
-        } catch (InvalidOAuthTokenException $authTokenException) {
-            return null;
+        if ($request->headers->has(PlatformRequest::HEADER_ACCESS_KEY)
+            || $request->headers->has(PlatformRequest::HEADER_CONTEXT_TOKEN)
+            || !$request->headers->has(self::HEADER_AUTHORIZATION)
+            || stripos($request->getPathInfo(), self::ROUTE_PREFIX) !== 0) {
+            throw new OAuthInvalidRequestException();
         }
     }
 
-    protected function isValidAccessToken(TokenStruct $token): bool
+    /**
+     * @throws InvalidOAuthTokenException
+     */
+    protected function extractToken(Request $request): TokenStruct
     {
+        $authorization = $request->headers->get(self::HEADER_AUTHORIZATION);
+        $authorization = substr($authorization, 7);
+
+        return $this->JWTFactory->parseToken($authorization);
+    }
+
+    /**
+     * @throws OAuthInvalidRequestException
+     */
+    protected function checkValidAccessToken(TokenStruct $token): void
+    {
+        if ($token->isExpired()) {
+            throw new OAuthInvalidRequestException();
+        }
+
         $context = Context::createDefaultContext($token->getTenantId());
         $readCriteria = new ReadCriteria([$token->getAccessTokenId()]);
 
@@ -97,6 +101,8 @@ class CustomerOAuthAuthenticationLoader implements EventSubscriberInterface
             ->read($readCriteria, $context)
             ->get($token->getAccessTokenId());
 
-        return $accessToken !== null;
+        if (!$accessToken) {
+            throw new OAuthInvalidRequestException();
+        }
     }
 }

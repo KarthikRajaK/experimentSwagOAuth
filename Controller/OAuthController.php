@@ -7,8 +7,8 @@ use Shopware\Core\Framework\Struct\Uuid;
 use Shopware\Storefront\Controller\StorefrontController;
 use Shopware\Storefront\Page\Account\AccountService;
 use SwagOAuth\OAuth\CustomerOAuthService;
-use SwagOAuth\OAuth\Data\OAuthAccessTokenStruct;
-use SwagOAuth\OAuth\Data\OAuthRefreshTokenStruct;
+use SwagOAuth\OAuth\Exception\OAuthException;
+use SwagOAuth\OAuth\Exception\OAuthInvalidClientException;
 use SwagOAuth\OAuth\Request\AuthorizeRequest;
 use SwagOAuth\OAuth\Request\TokenRequest;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -43,25 +43,24 @@ class OAuthController extends StorefrontController
      */
     public function authorize(Request $request, CheckoutContext $checkoutContext): Response
     {
-        $clientId = $request->get('client_id');
-        $redirectUri = $request->get('redirect_uri');
-        $state = $request->get('state');
+        $authorizeRequest = (new AuthorizeRequest())->assign($request->query->all());
 
-        $integration = $this->customerOAuthService->getIntegrationByAccessKey($checkoutContext, $clientId);
+        try {
+            $integration = $this->customerOAuthService
+                ->getIntegrationByAccessKey($checkoutContext, $authorizeRequest->getClientId());
 
-        if (!$integration) {
-            $callbackUrl = $this->buildErrorUrl($redirectUri, 'unauthorized_client', 'the client id is unknown');
+            $authorizeRequest->setIntegrationId($integration->getId());
+        } catch (OAuthInvalidClientException $invalidClientException) {
+            $callbackUrl = $this->buildErrorUrl($authorizeRequest->getRedirectUri(), $invalidClientException);
 
             return $this->redirect($callbackUrl);
+        } catch (\TypeError $error) {
+            return new Response('', 412);
         }
 
         return $this->renderStorefront(
             '@SwagOAuth/frontend/oauth/login.html.twig',
-            [
-                'integrationId' => $integration->getId(),
-                'redirectUri' => $redirectUri,
-                'state' => $state,
-            ]
+            $authorizeRequest->jsonSerialize()
         );
     }
 
@@ -83,11 +82,10 @@ class OAuthController extends StorefrontController
             );
         }
 
-        $code = Uuid::uuid4()->getHex();
+        $authCode = $this->customerOAuthService->createAuthCode($checkoutContext, $authorizeRequest, $contextToken);
 
-        $redirectUri = $this->customerOAuthService->generateRedirectUri($code, $authorizeRequest);
-
-        $this->customerOAuthService->createAuthCode($checkoutContext, $code, $authorizeRequest, $contextToken);
+        $redirectUri = $this->customerOAuthService
+            ->generateRedirectUri($authCode, $authorizeRequest);
 
         return $this->redirect($redirectUri);
     }
@@ -101,54 +99,18 @@ class OAuthController extends StorefrontController
         $tokenRequest->setClientId($request->headers->get('php-auth-user'));
         $tokenRequest->setClientSecret($request->headers->get('php-auth-pw'));
 
-        if (!$this->customerOAuthService->isClientValid($tokenRequest, $checkoutContext))
-        {
-            return new JsonResponse(
-                [
-                    'error' => 'unauthorized_client',
-                    'error_description' =>  'the client id is unknown',
-                ]
-            );
-        }
-
-        switch (true) {
-            case $tokenRequest->getGrantType() === 'authorization_code':
-                /** @var OAuthAccessTokenStruct $accessToken */
-                list($accessToken, $refreshToken) = $this->customerOAuthService->generateTokenAuthCode($checkoutContext, $tokenRequest);
-                break;
-            case $tokenRequest->getGrantType() === 'refresh_token':
-                $accessToken = $this->customerOAuthService->generateTokenRefreshToken($checkoutContext, $tokenRequest);
-                break;
-            default:
-                return new JsonResponse(
-                    [
-                        'error' => 'invalid_request',
-                        'error_description' =>  'the grant type is unknown',
-                    ]
-                );
-        }
-
-        $data = [
-            'token_type' => 'Bearer',
-            'expires_in' => '360',
-            'expires_on' => $accessToken->getExpires()->getTimestamp(),
-            'access_token' => $accessToken->getAccessToken(),
-        ];
-
-        if (isset($refreshToken)) {
-            /** @var OAuthRefreshTokenStruct $refreshToken */
-            $data['refresh_token'] = $refreshToken->getRefreshToken();
+        try {
+            $this->customerOAuthService->checkClientValid($tokenRequest, $checkoutContext);
+            $data = $this->customerOAuthService->createTokenData($checkoutContext, $tokenRequest);
+        } catch (OAuthException $authException) {
+            return new JsonResponse($authException->getErrorData());
         }
 
         return new JsonResponse($data);
     }
 
-    private function buildErrorUrl(string $redirectUrl, string $error, string $errorDescription): string
+    private function buildErrorUrl(string $redirectUrl, OAuthException $authException): string
     {
-        $data = [
-            'error' => $error,
-            'error_description' => $errorDescription,
-        ];
-        return sprintf('%s?%s', $redirectUrl, http_build_query($data));
+        return sprintf('%s?%s', $redirectUrl, http_build_query($authException->getErrorData()));
     }
 }

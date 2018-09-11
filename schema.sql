@@ -1,11 +1,15 @@
 CREATE TABLE IF NOT EXISTS `swag_oauth_access_token` (
-  `id`                  BINARY(16)   NOT NULL,
-  `tenant_id`           BINARY(16)   NOT NULL,
-  `context_token`       VARCHAR(255) NOT NULL,
-  `x_sw_access_key`     VARCHAR(255) NOT NULL,
-  `access_token`        VARCHAR(2000) NOT NULL,
-  `expires`             DATETIME(3)  NOT NULL,
-  PRIMARY KEY (`id`, `tenant_id`)
+  `id` BINARY(16)   NOT NULL,
+  `tenant_id` BINARY(16)   NOT NULL,
+  `context_token` VARCHAR(255) NOT NULL,
+  `sales_channel_id` BINARY(16) NOT NULL,
+  `sales_channel_tenant_id` BINARY(16) NOT NULL,
+  `access_token` VARCHAR(2000) NOT NULL,
+  `expires` DATETIME(3)  NOT NULL,
+  PRIMARY KEY (`id`, `tenant_id`),
+  FOREIGN KEY (`sales_channel_id`, `sales_channel_tenant_id`) REFERENCES sales_channel (`id`, `tenant_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS `swag_oauth_refresh_token` (

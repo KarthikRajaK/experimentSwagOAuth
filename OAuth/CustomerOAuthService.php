@@ -8,15 +8,23 @@ use Shopware\Core\Framework\ORM\Search\Criteria;
 use Shopware\Core\Framework\ORM\Search\Query\MatchQuery;
 use Shopware\Core\Framework\Struct\Uuid;
 use Shopware\Core\System\Integration\IntegrationCollection;
+use Shopware\Core\System\Integration\IntegrationDefinition;
 use Shopware\Core\System\Integration\IntegrationStruct;
 use SwagOAuth\OAuth\Data\OAuthAccessTokenStruct;
+use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeDefinition;
 use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeStruct;
+use SwagOAuth\OAuth\Data\OAuthRefreshTokenDefinition;
 use SwagOAuth\OAuth\Data\OAuthRefreshTokenStruct;
+use SwagOAuth\OAuth\Exception\OAuthInvalidClientException;
+use SwagOAuth\OAuth\Exception\OAuthInvalidRequestException;
+use SwagOAuth\OAuth\Exception\OAuthUnsupportedGrantTypeException;
 use SwagOAuth\OAuth\Request\AuthorizeRequest;
 use SwagOAuth\OAuth\Request\TokenRequest;
 
 class CustomerOAuthService
 {
+    const EXPIRE_IN_SECONDS = 3600;
+
     /** @var RepositoryInterface */
     private $integrationRepository;
 
@@ -46,10 +54,12 @@ class CustomerOAuthService
         $this->JWTFactory = $JWTFactory;
     }
 
-    public function generateRedirectUri(string $code, AuthorizeRequest $authorizeRequest): string
-    {
+    public function generateRedirectUri(
+        OAuthAuthorizationCodeStruct $authCode,
+        AuthorizeRequest $authorizeRequest
+    ): string {
         $responseData = [
-            'code' => $code,
+            'code' => $authCode->getAuthorizationCode(),
             'state' => $authorizeRequest->getState(),
         ];
 
@@ -60,10 +70,11 @@ class CustomerOAuthService
 
     public function createAuthCode(
         CheckoutContext $checkoutContext,
-        string $code,
         AuthorizeRequest $authorizeRequest,
         string $contextToken
-    ): void {
+    ): OAuthAuthorizationCodeStruct {
+        $code = UUid::uuid4()->getHex();
+
         $expires = new \DateTime();
         $expires->modify('+30 second');
         $data = [
@@ -75,20 +86,30 @@ class CustomerOAuthService
         ];
 
         $this->oauthAuthCodeRepository->create([$data], $checkoutContext->getContext());
+
+        return (new OAuthAuthorizationCodeStruct())->assign($data);
     }
 
-    public function isClientValid(TokenRequest $tokenRequest, CheckoutContext $context): bool
+    /**
+     * @throws OAuthInvalidClientException
+     */
+    public function checkClientValid(TokenRequest $tokenRequest, CheckoutContext $context): void
     {
         $integration = $this->getIntegrationByAccessKey($context, $tokenRequest->getClientId());
 
-        return $integration
-            && password_verify($tokenRequest->getClientSecret(), $integration->getSecretAccessKey());
+        if (!($integration
+            && password_verify($tokenRequest->getClientSecret(), $integration->getSecretAccessKey()))) {
+           throw new OAuthInvalidClientException();
+        }
     }
 
-    public function getIntegrationByAccessKey(CheckoutContext $checkoutContext, string $accessKey): ?IntegrationStruct
+    /**
+     * @throws OAuthInvalidClientException
+     */
+    public function getIntegrationByAccessKey(CheckoutContext $checkoutContext, string $accessKey): IntegrationStruct
     {
         $criteria = new Criteria();
-        $criteria->addFilter(new MatchQuery('integration.accessKey', $accessKey));
+        $criteria->addFilter(new MatchQuery(IntegrationDefinition::getEntityName() . '.accessKey', $accessKey));
 
         /** @var IntegrationCollection $integrations */
         $integrations = $this->integrationRepository->search($criteria, $checkoutContext->getContext());
@@ -96,12 +117,13 @@ class CustomerOAuthService
         /** @var ?IntegrationStruct $integration */
         $integration = $integrations->first();
 
+        if (!$integration) {
+            throw new OAuthInvalidClientException();
+        }
+
         return $integration;
     }
 
-    /**
-     * @return [OAuthAccessTokenStruct, OAuthRefreshTokenStruct]
-     */
     public function generateTokenAuthCode(
         CheckoutContext $checkoutContext,
         TokenRequest $tokenRequest
@@ -110,12 +132,14 @@ class CustomerOAuthService
         $refreshToken = $this->createRefreshToken($checkoutContext, $authCode);
         $this->linkRefreshTokenAuthCode($checkoutContext, $authCode, $refreshToken);
 
+        $accessToken = $this->createAccessToken($checkoutContext, $authCode->getContextToken());
+
         return [
-            $this->createAccessToken(
-                $checkoutContext,
-                $authCode->getContextToken()
-            ),
-            $refreshToken,
+            'token_type' => 'Bearer',
+            'expires_in' => self::EXPIRE_IN_SECONDS,
+            'expires_on' => $accessToken->getExpires()->getTimestamp(),
+            'access_token' => $accessToken->getAccessToken(),
+            'refresh_token' => $refreshToken->getRefreshToken(),
         ];
     }
 
@@ -125,10 +149,15 @@ class CustomerOAuthService
     ): OAuthAuthorizationCodeStruct {
         $criteria = new Criteria();
         $criteria->addFilter(
-            new MatchQuery('swag_oauth_authorization_code.integration.accessKey', $tokenRequest->getClientId())
+            new MatchQuery(
+                OAuthAuthorizationCodeDefinition::ENTITY_NAME . '.' . IntegrationDefinition::getEntityName(
+                ) . '.accessKey', $tokenRequest->getClientId()
+            )
         );
         $criteria->addFilter(
-            new MatchQuery('swag_oauth_authorization_code.authorizationCode', $tokenRequest->getCode())
+            new MatchQuery(
+                OAuthAuthorizationCodeDefinition::ENTITY_NAME . '.authorizationCode', $tokenRequest->getCode()
+            )
         );
 
         $authCodes = $this->oauthAuthCodeRepository->search($criteria, $checkoutContext->getContext())->getElements();
@@ -145,7 +174,6 @@ class CustomerOAuthService
         $refreshToken = new OAuthRefreshTokenStruct();
         $refreshToken->setId(Uuid::uuid4()->getHex());
         $refreshToken->setRefreshToken(Uuid::uuid4()->getHex());
-        $refreshToken->setExpires(new \DateTime());
         $refreshToken->setIntegrationId($authCode->getIntegrationId());
         $refreshToken->setContextToken($authCode->getContextToken());
 
@@ -172,16 +200,19 @@ class CustomerOAuthService
         string $contextToken
     ): OAuthAccessTokenStruct {
         $expires = new \DateTime();
-        $expires->modify('+360 second');
+        $expires->modify('+' . self::EXPIRE_IN_SECONDS . ' second');
 
         $accessToken = new OAuthAccessTokenStruct();
         $accessToken->setId(Uuid::uuid4()->getHex());
-        $accessToken->setExpires($expires);
         $accessToken->setContextToken($contextToken);
-        $accessToken->setXSwAccessKey($checkoutContext->getSalesChannel()->getAccessKey());
+        $accessToken->setSalesChannel($checkoutContext->getSalesChannel());
 
-        $accessTokenString =
-            $this->JWTFactory->generateToken($accessToken, $checkoutContext->getContext(), 360);
+        $accessTokenString = $this->JWTFactory->generateToken(
+            $accessToken,
+            $checkoutContext->getContext(),
+            self::EXPIRE_IN_SECONDS
+        )
+        ;
         $accessToken->setAccessToken($accessTokenString);
 
         $this->oauthAccessTokenRepository->create([$accessToken->jsonSerialize()], $checkoutContext->getContext());
@@ -192,13 +223,40 @@ class CustomerOAuthService
     public function generateTokenRefreshToken(
         CheckoutContext $checkoutContext,
         TokenRequest $tokenRequest
-    ): OAuthAccessTokenStruct {
+    ): array {
         $criteria = new Criteria();
-        $criteria->addFilter(new MatchQuery('swag_oauth_refresh_token.refreshToken', $tokenRequest->getRefreshToken()));
+        $criteria->addFilter(
+            new MatchQuery(
+                OAuthRefreshTokenDefinition::ENTITY_NAME . '.refreshToken', $tokenRequest->getRefreshToken()
+            )
+        );
 
         /** @var OAuthRefreshTokenStruct $refreshToken */
         $refreshToken = $this->oauthRefreshTokenRepository->search($criteria, $checkoutContext->getContext())->first();
 
-        return $this->createAccessToken($checkoutContext, $refreshToken->getContextToken());
+        $accessToken = $this->createAccessToken($checkoutContext, $refreshToken->getContextToken());
+
+        return [
+            'token_type' => 'Bearer',
+            'expires_in' => self::EXPIRE_IN_SECONDS,
+            'expires_on' => $accessToken->getExpires()->getTimestamp(),
+            'access_token' => $accessToken->getAccessToken(),
+        ];
+    }
+
+    /**
+     * @throws OAuthUnsupportedGrantTypeException
+     */
+    public function createTokenData(CheckoutContext $checkoutContext, TokenRequest $tokenRequest): array {
+        switch (true) {
+            case $tokenRequest->getGrantType() === 'authorization_code':
+                return $this->generateTokenAuthCode($checkoutContext, $tokenRequest);
+                break;
+            case $tokenRequest->getGrantType() === 'refresh_token':
+                return $this->generateTokenRefreshToken($checkoutContext, $tokenRequest);
+                break;
+            default:
+                throw new OAuthUnsupportedGrantTypeException();
+        }
     }
 }

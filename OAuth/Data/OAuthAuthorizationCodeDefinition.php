@@ -17,9 +17,11 @@ use Shopware\Core\System\Integration\IntegrationDefinition;
 
 class OAuthAuthorizationCodeDefinition extends EntityDefinition
 {
+    const ENTITY_NAME = 'swag_oauth_authorization_code';
+
     public static function getEntityName(): string
     {
-        return 'swag_oauth_authorization_code';
+        return self::ENTITY_NAME;
     }
 
     public static function getStructClass(): string

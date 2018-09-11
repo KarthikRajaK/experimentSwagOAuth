@@ -15,16 +15,21 @@
                  id="SwagOAuth\OAuth\Data\OAuthAccessTokenDefinition">
             <tag name="shopware.entity.definition" entity="swag_oauth_access_token"/>
         </service>
+
         <service class="SwagOAuth\OAuth\Data\OAuthAuthorizationCodeDefinition"
                  id="SwagOAuth\OAuth\Data\OAuthAuthorizationCodeDefinition">
+
             <tag name="shopware.entity.definition" entity="swag_oauth_authorization_code"/>
         </service>
+
         <service class="SwagOAuth\OAuth\Data\OAuthRefreshTokenDefinition"
                  id="SwagOAuth\OAuth\Data\OAuthRefreshTokenDefinition">
+
             <tag name="shopware.entity.definition" entity="swag_oauth_refresh_token"/>
         </service>
 
-        <service id="swag_oauth_access_token.repository" class="Shopware\Core\Framework\ORM\EntityRepository"
+        <service id="swag_oauth_access_token.repository"
+                 class="Shopware\Core\Framework\ORM\EntityRepository"
                  public="true">
             <argument>SwagOAuth\OAuth\Data\OAuthAccessTokenDefinition</argument>
             <argument type="service" id="Shopware\Core\Framework\ORM\Read\EntityReaderInterface"/>
@@ -34,7 +39,8 @@
             <argument type="service" id="event_dispatcher"/>
         </service>
 
-        <service id="swag_oauth_authorization_code.repository" class="Shopware\Core\Framework\ORM\EntityRepository"
+        <service id="swag_oauth_authorization_code.repository"
+                 class="Shopware\Core\Framework\ORM\EntityRepository"
                  public="true">
             <argument>SwagOAuth\OAuth\Data\OAuthAuthorizationCodeDefinition</argument>
             <argument type="service" id="Shopware\Core\Framework\ORM\Read\EntityReaderInterface"/>
@@ -44,7 +50,8 @@
             <argument type="service" id="event_dispatcher"/>
         </service>
 
-        <service id="swag_oauth_refresh_token.repository" class="Shopware\Core\Framework\ORM\EntityRepository"
+        <service id="swag_oauth_refresh_token.repository"
+                 class="Shopware\Core\Framework\ORM\EntityRepository"
                  public="true">
             <argument>SwagOAuth\OAuth\Data\OAuthRefreshTokenDefinition</argument>
             <argument type="service" id="Shopware\Core\Framework\ORM\Read\EntityReaderInterface"/>
@@ -54,8 +61,8 @@
             <argument type="service" id="event_dispatcher"/>
         </service>
 
-        <service class="SwagOAuth\OAuth\Subscriber\CustomerOAuthAuthenticationLoader"
-                 id="SwagOAuth\OAuth\Subscriber\CustomerOAuthAuthenticationLoader"
+        <service id="SwagOAuth\OAuth\Subscriber\CustomerOAuthAuthenticationLoader"
+                 class="SwagOAuth\OAuth\Subscriber\CustomerOAuthAuthenticationLoader"
                  public="true">
             <argument type="service" id="swag_oauth_access_token.repository"/>
             <argument type="service" id="SwagOAuth\OAuth\JWTFactory"/>
@@ -63,17 +70,18 @@
             <tag name="kernel.event_subscriber"/>
         </service>
 
-        <service class="SwagOAuth\OAuth\JWTFactory" id="SwagOAuth\OAuth\JWTFactory">
+        <service id="SwagOAuth\OAuth\JWTFactory"
+                 class="SwagOAuth\OAuth\JWTFactory">
             <argument type="service" id="shopware.private_key"/>
         </service>
 
-        <service class="SwagOAuth\OAuth\CustomerOAuthService" id="SwagOAuth\OAuth\CustomerOAuthService">
+        <service id="SwagOAuth\OAuth\CustomerOAuthService"
+                 class="SwagOAuth\OAuth\CustomerOAuthService">
             <argument type="service" id="integration.repository"/>
             <argument type="service" id="swag_oauth_authorization_code.repository"/>
             <argument type="service" id="swag_oauth_refresh_token.repository"/>
             <argument type="service" id="swag_oauth_access_token.repository"/>
             <argument id="SwagOAuth\OAuth\JWTFactory" type="service"/>
         </service>
-
     </services>
 </container>

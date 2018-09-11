@@ -1,11 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace SwagOAuth\OAuth;
+namespace SwagOAuth\OAuth\Exception;
 
-use Shopware\Core\Framework\ShopwareHttpException;
 use Symfony\Component\HttpFoundation\Response;
 
-class InvalidOAuthTokenException extends ShopwareHttpException
+class InvalidOAuthTokenException extends OAuthException
 {
     protected $code = 'INVALID-OAUTH-TOKEN';
 

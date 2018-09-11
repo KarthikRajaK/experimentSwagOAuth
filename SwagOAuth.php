@@ -3,10 +3,9 @@
 namespace SwagOAuth;
 
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\DBALException;
+use Shopware\Core\Framework\Plugin;
 use Shopware\Core\Framework\Plugin\Context\InstallContext;
 use Shopware\Core\Framework\Plugin\Context\UninstallContext;
-use Shopware\Core\Framework\Plugin;
 use SwagOAuth\OAuth\Data\OAuthAccessTokenDefinition;
 use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeDefinition;
 use SwagOAuth\OAuth\Data\OAuthRefreshTokenDefinition;
@@ -29,13 +28,7 @@ class SwagOAuth extends Plugin
         $connection = $this->container->get(Connection::class);
         $sql = file_get_contents($this->getPath() . '/schema.sql');
 
-        $connection->beginTransaction();
-        try {
-            $connection->executeUpdate($sql);
-        } catch (DBALException $e) {
-            $connection->rollBack();
-            throw $e;
-        }
+        $connection->executeUpdate($sql);
     }
 
     public function uninstall(UninstallContext $context)
@@ -54,8 +47,8 @@ class SwagOAuth extends Plugin
     {
         /** @var Connection $dbal */
         $dbal = $this->container->get('Doctrine\DBAL\Connection');
-        $dbal->exec('DROP TABLE IF EXISTS `' . OAuthAccessTokenDefinition::getEntityName() .'`;');
-        $dbal->exec('DROP TABLE IF EXISTS `' . OAuthAuthorizationCodeDefinition::getEntityName() .'`;');
-        $dbal->exec('DROP TABLE IF EXISTS `' . OAuthRefreshTokenDefinition::getEntityName() .'`;');
+        $dbal->exec('DROP TABLE IF EXISTS `' . OAuthAccessTokenDefinition::getEntityName() . '`;');
+        $dbal->exec('DROP TABLE IF EXISTS `' . OAuthAuthorizationCodeDefinition::getEntityName() . '`;');
+        $dbal->exec('DROP TABLE IF EXISTS `' . OAuthRefreshTokenDefinition::getEntityName() . '`;');
     }
 }

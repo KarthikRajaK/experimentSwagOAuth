@@ -3,7 +3,6 @@
 namespace SwagOAuth\OAuth\Data;
 
 use Shopware\Core\Framework\ORM\EntityDefinition;
-use Shopware\Core\Framework\ORM\Field\DateField;
 use Shopware\Core\Framework\ORM\Field\FkField;
 use Shopware\Core\Framework\ORM\Field\IdField;
 use Shopware\Core\Framework\ORM\Field\StringField;
@@ -15,9 +14,11 @@ use Shopware\Core\System\Integration\IntegrationDefinition;
 
 class OAuthRefreshTokenDefinition extends EntityDefinition
 {
+    const ENTITY_NAME = 'swag_oauth_refresh_token';
+
     public static function getEntityName(): string
     {
-        return 'swag_oauth_refresh_token';
+        return self::ENTITY_NAME;
     }
 
     public static function getStructClass(): string
@@ -39,7 +40,6 @@ class OAuthRefreshTokenDefinition extends EntityDefinition
                 ),
 
                 (new StringField('context_token', 'contextToken'))->setFlags(new Required()),
-                new DateField('expires', 'expires'),
             ]
         );
     }

@@ -3,90 +3,72 @@
 namespace SwagOAuth\OAuth\Data;
 
 use Shopware\Core\Framework\ORM\Entity;
+use Shopware\Core\System\SalesChannel\SalesChannelStruct;
 
 class OAuthAccessTokenStruct extends Entity
 {
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $contextToken;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $accessToken;
 
-    /**
-     * @var \DateTime
-     */
+    /** @var string */
+    protected $salesChannelId;
+
+    /** @var SalesChannelStruct */
+    protected $salesChannel;
+
+    /** @var \DateTime */
     protected $expires;
 
-    /**
-     * @var string
-     */
-    protected $xSwAccessKey;
-
-    /**
-     * @return string
-     */
     public function getContextToken(): string
     {
         return $this->contextToken;
     }
 
-    /**
-     * @param string $customerId
-     */
     public function setContextToken(string $contextToken): void
     {
         $this->contextToken = $contextToken;
     }
 
-    /**
-     * @return string
-     */
     public function getAccessToken(): string
     {
         return $this->accessToken;
     }
 
-    /**
-     * @param string $accessToken
-     */
     public function setAccessToken(string $accessToken): void
     {
         $this->accessToken = $accessToken;
     }
 
-    /**
-     * @param \DateTime $expires
-     */
-    public function setExpires(\DateTime $expires): void
+    public function getSalesChannelId(): string
     {
-        $this->expires = $expires;
+        return $this->salesChannelId;
     }
 
-    /**
-     * @return \DateTime
-     */
+    public function setSalesChannelId(string $salesChannelId): void
+    {
+        $this->salesChannelId = $salesChannelId;
+    }
+
+    public function getSalesChannel(): ?SalesChannelStruct
+    {
+        return $this->salesChannel;
+    }
+
+    public function setSalesChannel(?SalesChannelStruct $salesChannel): void
+    {
+        $this->salesChannel = $salesChannel;
+    }
+
     public function getExpires(): \DateTime
     {
         return $this->expires;
     }
 
-    /**
-     * @return string
-     */
-    public function getXSwAccessKey(): string
+    public function setExpires(\DateTime $expires): void
     {
-        return $this->xSwAccessKey;
-    }
-
-    /**
-     * @param string $xSwAccessKey
-     */
-    public function setXSwAccessKey(string $xSwAccessKey): void
-    {
-        $this->xSwAccessKey = $xSwAccessKey;
+        $this->expires = $expires;
     }
 }

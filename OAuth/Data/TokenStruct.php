@@ -7,31 +7,31 @@ use Shopware\Core\Framework\Struct\Struct;
 class TokenStruct extends Struct
 {
     /** @var string */
-    private $id;
+    protected $id;
 
     /** @var string */
-    private $token;
+    protected $token;
 
     /** @var string */
-    private $contextToken;
+    protected $contextToken;
 
     /** @var string */
-    private $accessTokenId;
+    protected $accessTokenId;
 
     /** @var string */
-    private $tenantId;
+    protected $tenantId;
 
     /** @var int Unix Timestamp */
-    private $expires;
+    protected $expires;
 
     /** @var string */
-    private $xSwAccessKey;
+    protected $xSwAccessKey;
 
     public function __construct(
         string $id,
         string $token,
         string $contextToken,
-        string $accesTokenId,
+        string $accessTokenId,
         string $tenantId,
         string $xSwAccessKey,
         int $expires
@@ -39,7 +39,7 @@ class TokenStruct extends Struct
         $this->id = $id;
         $this->token = $token;
         $this->contextToken = $contextToken;
-        $this->accessTokenId = $accesTokenId;
+        $this->accessTokenId = $accessTokenId;
         $this->tenantId = $tenantId;
         $this->xSwAccessKey = $xSwAccessKey;
         $this->expires = $expires;

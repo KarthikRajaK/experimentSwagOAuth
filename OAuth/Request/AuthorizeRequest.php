@@ -6,80 +6,80 @@ use Shopware\Storefront\Page\Account\LoginRequest;
 
 class AuthorizeRequest extends LoginRequest
 {
-    /** @var string */
+    /** @var ?string */
     protected $integrationId;
 
-    /** @var string */
+    /** @var ?string */
     protected $state;
 
-    /** @var string */
-    protected $redirectUri;
+    /** @var ?string */
+    protected $redirect_uri;
 
-    /** @var string */
+    /** @var ?string */
     protected $loginError;
 
-    /** @var string */
-    protected $clientId;
+    /** @var ?string */
+    protected $client_id;
 
-    /** @var string */
+    /** @var ?string */
     protected $clientSecret;
 
-    public function getIntegrationId(): string
+    public function getIntegrationId(): ?string
     {
         return $this->integrationId;
     }
 
-    public function setIntegrationId(string $integrationId): void
+    public function setIntegrationId(?string $integrationId): void
     {
         $this->integrationId = $integrationId;
     }
 
-    public function getState(): string
+    public function getState(): ?string
     {
         return $this->state;
     }
 
-    public function setState(string $state): void
+    public function setState(?string $state): void
     {
         $this->state = $state;
     }
 
-    public function getRedirectUri(): string
+    public function getRedirectUri(): ?string
     {
-        return $this->redirectUri;
+        return $this->redirect_uri;
     }
 
-    public function setRedirectUri(string $redirectUri): void
+    public function setRedirectUri(?string $redirectUri): void
     {
-        $this->redirectUri = $redirectUri;
+        $this->redirect_uri = $redirectUri;
     }
 
-    public function getLoginError(): string
+    public function getLoginError(): ?string
     {
         return $this->loginError;
     }
 
-    public function setLoginError(string $loginError): void
+    public function setLoginError(?string $loginError): void
     {
         $this->loginError = $loginError;
     }
 
-    public function getClientId(): string
+    public function getClientId(): ?string
     {
-        return $this->clientId;
+        return $this->client_id;
     }
 
-    public function setClientId(string $clientId): void
+    public function setClientId(?string $clientId): void
     {
-        $this->clientId = $clientId;
+        $this->client_id = $clientId;
     }
 
-    public function getClientSecret(): string
+    public function getClientSecret(): ?string
     {
         return $this->clientSecret;
     }
 
-    public function setClientSecret(string $clientSecret): void
+    public function setClientSecret(?string $clientSecret): void
     {
         $this->clientSecret = $clientSecret;
     }
