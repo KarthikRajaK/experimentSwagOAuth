@@ -15,6 +15,7 @@ use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeDefinition;
 use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeStruct;
 use SwagOAuth\OAuth\Data\OAuthRefreshTokenDefinition;
 use SwagOAuth\OAuth\Data\OAuthRefreshTokenStruct;
+use SwagOAuth\OAuth\Exception\OAuthException;
 use SwagOAuth\OAuth\Exception\OAuthInvalidClientException;
 use SwagOAuth\OAuth\Exception\OAuthInvalidRequestException;
 use SwagOAuth\OAuth\Exception\OAuthUnsupportedGrantTypeException;
@@ -68,11 +69,18 @@ class CustomerOAuthService
         return $callbackUrl;
     }
 
+    /**
+     * @throws OAuthInvalidRequestException
+     */
     public function createAuthCode(
         CheckoutContext $checkoutContext,
         AuthorizeRequest $authorizeRequest,
         string $contextToken
     ): OAuthAuthorizationCodeStruct {
+        if (!$authorizeRequest->getIntegrationId()){
+            throw new OAuthInvalidRequestException();
+        }
+
         $code = UUid::uuid4()->getHex();
 
         $expires = new \DateTime();
@@ -95,8 +103,11 @@ class CustomerOAuthService
      */
     public function checkClientValid(TokenRequest $tokenRequest, CheckoutContext $context): void
     {
-        $integration = $this->getIntegrationByAccessKey($context, $tokenRequest->getClientId());
+        if (!$tokenRequest->getClientId() || !$tokenRequest->getClientSecret()) {
+            throw new OAuthInvalidClientException();
+        }
 
+        $integration = $this->getIntegrationByAccessKey($context, $tokenRequest->getClientId());
         if (!($integration
             && password_verify($tokenRequest->getClientSecret(), $integration->getSecretAccessKey()))) {
            throw new OAuthInvalidClientException();
@@ -124,10 +135,17 @@ class CustomerOAuthService
         return $integration;
     }
 
+    /**
+     * @throws OAuthInvalidRequestException
+     */
     public function generateTokenAuthCode(
         CheckoutContext $checkoutContext,
         TokenRequest $tokenRequest
     ): array {
+        if (!$tokenRequest->getCode()) {
+            throw new OAuthInvalidRequestException();
+        }
+
         $authCode = $this->getAuthCode($checkoutContext, $tokenRequest);
         $refreshToken = $this->createRefreshToken($checkoutContext, $authCode);
         $this->linkRefreshTokenAuthCode($checkoutContext, $authCode, $refreshToken);
@@ -206,6 +224,8 @@ class CustomerOAuthService
         $accessToken->setId(Uuid::uuid4()->getHex());
         $accessToken->setContextToken($contextToken);
         $accessToken->setSalesChannel($checkoutContext->getSalesChannel());
+        $accessToken->setSalesChannelId($checkoutContext->getSalesChannel()->getId());
+        $accessToken->setExpires($expires);
 
         $accessTokenString = $this->JWTFactory->generateToken(
             $accessToken,
@@ -245,16 +265,18 @@ class CustomerOAuthService
     }
 
     /**
-     * @throws OAuthUnsupportedGrantTypeException
+     * @throws OAuthException
      */
     public function createTokenData(CheckoutContext $checkoutContext, TokenRequest $tokenRequest): array {
+        if (!$tokenRequest->getGrantType()) {
+            throw new OAuthUnsupportedGrantTypeException();
+        }
+
         switch (true) {
             case $tokenRequest->getGrantType() === 'authorization_code':
                 return $this->generateTokenAuthCode($checkoutContext, $tokenRequest);
-                break;
             case $tokenRequest->getGrantType() === 'refresh_token':
                 return $this->generateTokenRefreshToken($checkoutContext, $tokenRequest);
-                break;
             default:
                 throw new OAuthUnsupportedGrantTypeException();
         }

@@ -3,7 +3,6 @@
 namespace SwagOAuth\Controller;
 
 use Shopware\Core\Checkout\CheckoutContext;
-use Shopware\Core\Framework\Struct\Uuid;
 use Shopware\Storefront\Controller\StorefrontController;
 use Shopware\Storefront\Page\Account\AccountService;
 use SwagOAuth\OAuth\CustomerOAuthService;
@@ -73,7 +72,9 @@ class OAuthController extends StorefrontController
 
         try {
             $contextToken = $this->accountService->login($authorizeRequest, $checkoutContext);
-        } catch (BadCredentialsException | UnauthorizedHttpException $exception) {
+
+            $authCode = $this->customerOAuthService->createAuthCode($checkoutContext, $authorizeRequest, $contextToken);
+        } catch (BadCredentialsException | UnauthorizedHttpException | OAuthException $exception) {
             $authorizeRequest->setLoginError($exception->getMessage());
 
             return $this->renderStorefront(
@@ -81,8 +82,6 @@ class OAuthController extends StorefrontController
                 $authorizeRequest->jsonSerialize()
             );
         }
-
-        $authCode = $this->customerOAuthService->createAuthCode($checkoutContext, $authorizeRequest, $contextToken);
 
         $redirectUri = $this->customerOAuthService
             ->generateRedirectUri($authCode, $authorizeRequest);
@@ -103,7 +102,7 @@ class OAuthController extends StorefrontController
             $this->customerOAuthService->checkClientValid($tokenRequest, $checkoutContext);
             $data = $this->customerOAuthService->createTokenData($checkoutContext, $tokenRequest);
         } catch (OAuthException $authException) {
-            return new JsonResponse($authException->getErrorData());
+            return new JsonResponse($authException->getErrorData(), $authException->getStatusCode());
         }
 
         return new JsonResponse($data);
