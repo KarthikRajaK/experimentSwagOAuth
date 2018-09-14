@@ -108,8 +108,7 @@ class CustomerOAuthService
         }
 
         $integration = $this->getIntegrationByAccessKey($context, $tokenRequest->getClientId());
-        if (!($integration
-            && password_verify($tokenRequest->getClientSecret(), $integration->getSecretAccessKey()))) {
+        if (!password_verify($tokenRequest->getClientSecret(), $integration->getSecretAccessKey())) {
            throw new OAuthInvalidClientException();
         }
     }

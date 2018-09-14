@@ -95,7 +95,7 @@ class CustomerOAuthAuthenticationLoader implements EventSubscriberInterface
         $context = Context::createDefaultContext($token->getTenantId());
         $readCriteria = new ReadCriteria([$token->getAccessTokenId()]);
 
-        /** @var OAuthAccessTokenStruct $accessToken */
+        /** @var OAuthAccessTokenStruct|null $accessToken */
         $accessToken = $this->oauthAccessTokenRepository
             ->read($readCriteria, $context)
             ->get($token->getAccessTokenId());
