@@ -54,7 +54,7 @@ class OAuthController extends StorefrontController
 
             return $this->redirect($callbackUrl);
         } catch (\TypeError $error) {
-            return new Response('', 412);
+            return new Response('', Response::HTTP_PRECONDITION_FAILED);
         }
 
         return $this->renderStorefront(

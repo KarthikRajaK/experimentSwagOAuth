@@ -6,19 +6,19 @@ use Shopware\Core\Framework\Struct\Struct;
 
 class TokenRequest extends Struct
 {
-    /** @var ?string */
+    /** @var null|string */
     protected $client_id;
 
-    /** @var ?string */
+    /** @var null|string */
     protected $grant_type;
 
-    /** @var ?string */
+    /** @var null|string */
     protected $client_secret;
 
-    /** @var ?string */
+    /** @var null|string */
     protected $code;
 
-    /** @var ?string */
+    /** @var null|string */
     protected $refresh_token;
 
     public function getClientId(): ?string

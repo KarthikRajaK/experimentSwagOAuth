@@ -14,7 +14,8 @@ class Migration1536928368Inital extends MigrationStep
 
     public function update(Connection $connection): void
     {
-        $connection->executeQuery('CREATE TABLE IF NOT EXISTS `swag_oauth_access_token` (
+        $connection->executeQuery(
+            'CREATE TABLE IF NOT EXISTS `swag_oauth_access_token` (
   `id` BINARY(16)   NOT NULL,
   `tenant_id` BINARY(16)   NOT NULL,
   `context_token` VARCHAR(255) NOT NULL,
@@ -26,9 +27,11 @@ class Migration1536928368Inital extends MigrationStep
   FOREIGN KEY (`sales_channel_id`, `sales_channel_tenant_id`) REFERENCES sales_channel (`id`, `tenant_id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
-);
+);'
+        );
 
-CREATE TABLE IF NOT EXISTS `swag_oauth_refresh_token` (
+        $connection->executeQuery(
+            'CREATE TABLE IF NOT EXISTS `swag_oauth_refresh_token` (
   `id` BINARY(16) NOT NULL,
   `tenant_id` BINARY(16) NOT NULL,
   `refresh_token` VARCHAR(250) NOT NULL,
@@ -40,9 +43,11 @@ CREATE TABLE IF NOT EXISTS `swag_oauth_refresh_token` (
   FOREIGN KEY (`integration_id`, `integration_tenant_id`) REFERENCES integration (`id`, `tenant_id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
-);
+);'
+        );
 
-CREATE TABLE IF NOT EXISTS `swag_oauth_authorization_code` (
+        $connection->executeQuery(
+            'CREATE TABLE IF NOT EXISTS `swag_oauth_authorization_code` (
   `id` BINARY(16) NOT NULL,
   `tenant_id` BINARY(16) NOT NULL,
   `authorization_code` VARCHAR(250) NOT NULL,
@@ -60,7 +65,8 @@ CREATE TABLE IF NOT EXISTS `swag_oauth_authorization_code` (
   FOREIGN KEY (`swag_oauth_refresh_token_id`, `swag_oauth_refresh_token_tenant_id`) REFERENCES swag_oauth_refresh_token(`id`, `tenant_id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
-);');
+);'
+        );
     }
 
     public function updateDestructive(Connection $connection): void

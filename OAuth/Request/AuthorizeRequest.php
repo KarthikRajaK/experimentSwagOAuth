@@ -6,22 +6,22 @@ use Shopware\Storefront\Page\Account\LoginRequest;
 
 class AuthorizeRequest extends LoginRequest
 {
-    /** @var ?string */
+    /** @var null|string */
     protected $integrationId;
 
-    /** @var ?string */
+    /** @var null|string */
     protected $state;
 
-    /** @var ?string */
+    /** @var null|string */
     protected $redirect_uri;
 
-    /** @var ?string */
+    /** @var null|string */
     protected $loginError;
 
-    /** @var ?string */
+    /** @var null|string */
     protected $client_id;
 
-    /** @var ?string */
+    /** @var null|string */
     protected $clientSecret;
 
     public function getIntegrationId(): ?string

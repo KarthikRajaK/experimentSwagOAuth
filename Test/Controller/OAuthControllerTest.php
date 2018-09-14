@@ -22,6 +22,7 @@ use SwagOAuth\OAuth\Data\OAuthRefreshTokenStruct;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 
 /**
@@ -91,7 +92,7 @@ class OAuthControllerTest extends TestCase
 
         $response = $this->controller->authorize($request, $this->getCheckoutContext());
 
-        self::assertSame(412, $response->getStatusCode());
+        self::assertSame(Response::HTTP_PRECONDITION_FAILED, $response->getStatusCode());
     }
 
     public function testAuthorizeWithNotExistingClientId()
@@ -109,7 +110,7 @@ class OAuthControllerTest extends TestCase
         $query = $this->parseUrl($response);
 
         self::assertInstanceOf(RedirectResponse::class, $response);
-        self::assertSame(302, $response->getStatusCode());
+        self::assertSame(Response::HTTP_FOUND, $response->getStatusCode());
         self::assertSame($query['error'], 'invalid_client');
         self::assertSame(
             $query['error_description'],
@@ -269,7 +270,7 @@ class OAuthControllerTest extends TestCase
         $responseData = $this->getData($response);
 
         self::assertSame('invalid_request', $responseData['error']);
-        self::assertSame(500, $response->getStatusCode());
+        self::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
     public function testGenerateTokenInvalidAuth()
@@ -288,7 +289,7 @@ class OAuthControllerTest extends TestCase
         $responseData = $this->getData($response);
 
         self::assertSame('invalid_client', $responseData['error']);
-        self::assertSame(500, $response->getStatusCode());
+        self::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
     public function testGenerateTokenInvalidSecret()
@@ -309,7 +310,7 @@ class OAuthControllerTest extends TestCase
         $responseData = $this->getData($response);
 
         self::assertSame('invalid_client', $responseData['error']);
-        self::assertSame(500, $response->getStatusCode());
+        self::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
     public function testGenerateTokenWithoutAuth()
@@ -320,7 +321,7 @@ class OAuthControllerTest extends TestCase
         $responseData = $this->getData($response);
 
         self::assertSame('invalid_client', $responseData['error']);
-        self::assertSame(500, $response->getStatusCode());
+        self::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
     public function testGenerateTokenWithoutGrantType()
@@ -343,7 +344,7 @@ class OAuthControllerTest extends TestCase
         $responseData = $this->getData($response);
 
         self::assertSame('unsupported_grant_type', $responseData['error']);
-        self::assertSame(500, $response->getStatusCode());
+        self::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
     public function testGenerateTokenWitInvalidGrantType()
@@ -367,7 +368,7 @@ class OAuthControllerTest extends TestCase
         $responseData = $this->getData($response);
 
         self::assertSame('unsupported_grant_type', $responseData['error']);
-        self::assertSame(500, $response->getStatusCode());
+        self::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
     public function testGenerateTokenRefreshToken()
