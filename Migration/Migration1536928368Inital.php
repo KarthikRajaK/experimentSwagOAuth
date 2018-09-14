@@ -1,4 +1,20 @@
-CREATE TABLE IF NOT EXISTS `swag_oauth_access_token` (
+<?php declare(strict_types=1);
+
+namespace SwagOAuth\Migration;
+
+use Doctrine\DBAL\Connection;
+use Shopware\Core\Framework\Migration\MigrationStep;
+
+class Migration1536928368Inital extends MigrationStep
+{
+    public function getCreationTimestamp(): int
+    {
+        return 1536928368;
+    }
+
+    public function update(Connection $connection): void
+    {
+        $connection->executeQuery('CREATE TABLE IF NOT EXISTS `swag_oauth_access_token` (
   `id` BINARY(16)   NOT NULL,
   `tenant_id` BINARY(16)   NOT NULL,
   `context_token` VARCHAR(255) NOT NULL,
@@ -44,4 +60,11 @@ CREATE TABLE IF NOT EXISTS `swag_oauth_authorization_code` (
   FOREIGN KEY (`swag_oauth_refresh_token_id`, `swag_oauth_refresh_token_tenant_id`) REFERENCES swag_oauth_refresh_token(`id`, `tenant_id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
-);
+);');
+    }
+
+    public function updateDestructive(Connection $connection): void
+    {
+        // implement update destructive
+    }
+}

@@ -4,7 +4,6 @@ namespace SwagOAuth;
 
 use Doctrine\DBAL\Connection;
 use Shopware\Core\Framework\Plugin;
-use Shopware\Core\Framework\Plugin\Context\InstallContext;
 use Shopware\Core\Framework\Plugin\Context\UninstallContext;
 use SwagOAuth\OAuth\Data\OAuthAccessTokenDefinition;
 use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeDefinition;
@@ -20,15 +19,6 @@ class SwagOAuth extends Plugin
         parent::build($container);
         $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/DependencyInjection/'));
         $loader->load('services.xml');
-    }
-
-    public function install(InstallContext $context)
-    {
-        /** @var Connection $connection */
-        $connection = $this->container->get(Connection::class);
-        $sql = file_get_contents($this->getPath() . '/schema.sql');
-
-        $connection->executeUpdate($sql);
     }
 
     public function uninstall(UninstallContext $context)

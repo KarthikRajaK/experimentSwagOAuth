@@ -231,8 +231,8 @@ class CustomerOAuthService
             $accessToken,
             $checkoutContext->getContext(),
             self::EXPIRE_IN_SECONDS
-        )
-        ;
+        );
+
         $accessToken->setAccessToken($accessTokenString);
 
         $this->oauthAccessTokenRepository->create([$accessToken->jsonSerialize()], $checkoutContext->getContext());
