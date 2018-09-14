@@ -38,7 +38,6 @@ class Migration1536928368Inital extends MigrationStep
   `integration_id` BINARY(16) NOT NULL,
   `integration_tenant_id` BINARY(16) NOT NULL,
   `context_token` VARCHAR(255) NOT NULL,
-  `expires` DATETIME(3),
   PRIMARY KEY (`id`, `tenant_id`),
   FOREIGN KEY (`integration_id`, `integration_tenant_id`) REFERENCES integration (`id`, `tenant_id`)
     ON DELETE CASCADE
