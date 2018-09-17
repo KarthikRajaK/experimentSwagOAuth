@@ -3,69 +3,72 @@
 namespace SwagOAuth\OAuth\Data;
 
 use Shopware\Core\Framework\ORM\Entity;
+use Shopware\Core\System\SalesChannel\SalesChannelStruct;
 
 class OAuthAccessTokenStruct extends Entity
 {
-    /**
-     * @var string
-     */
-    protected $customerId;
+    /** @var string */
+    protected $contextToken;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $accessToken;
 
-    /**
-     * @var \DateTime
-     */
+    /** @var string */
+    protected $salesChannelId;
+
+    /** @var SalesChannelStruct */
+    protected $salesChannel;
+
+    /** @var \DateTime */
     protected $expires;
 
-    /**
-     * @return string
-     */
-    public function getCustomerId(): string
+    public function getContextToken(): string
     {
-        return $this->customerId;
+        return $this->contextToken;
     }
 
-    /**
-     * @param string $customerId
-     */
-    public function setCustomerId(string $customerId): void
+    public function setContextToken(string $contextToken): void
     {
-        $this->customerId = $customerId;
+        $this->contextToken = $contextToken;
     }
 
-    /**
-     * @return string
-     */
     public function getAccessToken(): string
     {
         return $this->accessToken;
     }
 
-    /**
-     * @param string $accessToken
-     */
     public function setAccessToken(string $accessToken): void
     {
         $this->accessToken = $accessToken;
     }
 
-    /**
-     * @param \DateTime $expires
-     */
-    public function setExpires(\DateTime $expires): void
+    public function getSalesChannelId(): string
     {
-        $this->expires = $expires;
+        return $this->salesChannelId;
     }
 
-    /**
-     * @return \DateTime
-     */
+    public function setSalesChannelId(string $salesChannelId): void
+    {
+        $this->salesChannelId = $salesChannelId;
+    }
+
+    public function getSalesChannel(): ?SalesChannelStruct
+    {
+        return $this->salesChannel;
+    }
+
+    public function setSalesChannel(?SalesChannelStruct $salesChannel): void
+    {
+        $this->salesChannel = $salesChannel;
+    }
+
     public function getExpires(): \DateTime
     {
         return $this->expires;
+    }
+
+    public function setExpires(\DateTime $expires): void
+    {
+        $this->expires = $expires;
     }
 }

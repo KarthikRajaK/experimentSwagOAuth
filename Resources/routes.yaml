@@ -1,0 +1,3 @@
+swag_oauth:
+  resource: ../Controller/
+  type: annotation

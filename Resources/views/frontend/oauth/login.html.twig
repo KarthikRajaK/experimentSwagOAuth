@@ -1,18 +1,40 @@
-{% block form_oauth_login %}
-    <div class="login-page" style="width: 360px;padding: 8% 0 0;margin: auto;">
-        <div class="form"
-             style="position: relative; z-index: 1; background: #FFFFFF; max-width: 360px; margin: 0 auto 100px; padding: 45px; text-align: center; box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24);">
-            {% if login_error %}
-                <div>{{ login_error }}</div>
-            {% endif %}
-            <form class="login-form" method="post" action="{{ path('customer.oauth.authorize.check') }}">
-                <input type="text" name="username" placeholder="username"/>
-                <input type="password" name="password" placeholder="password"/>
-                <input type="hidden" name="client_id" value="{{ clientId }}"/>
-                <input type="hidden" name="state" value="{{ state }}"/>
-                <input type="hidden" name="redirect_uri" value="{{ redirectUri }}"/>
-                <input type="submit" value="login"/>
-            </form>
+    <div class="register--login content block">
+        {% if loginError %}
+            <div class="alert is--error">
+                <div class="alert--icon">
+                    <i class="icon--element icon--cross"></i>
+                </div>
+
+                <div class="alert--content">
+                    {{ loginError }}
+                </div>
+            </div>
+        {% endif %}
+        <div class="register--existing-customer panel has--border is--rounded">
+
+            <h2 class="panel--title is--underline">I'm already a customer.</h2>
+            <div class="panel--body is--wide">
+
+                <form name="login" method="post" action="{{ path('customer.oauth.authorize.check') }}">
+                    <div class="register--login-description">Log in with your email address and password</div>
+                    <input type="hidden" name="integrationId" value="{{ integrationId }}"/>
+                    <input type="hidden" name="state" value="{{ state }}"/>
+                    <input type="hidden" name="redirect_uri" value="{{ redirect_uri }}"/>
+                    <div class="register--login-email">
+                        <input name="username" placeholder="Your email address" autocomplete="email" tabindex="1"
+                               value="{{ username }}" id="email" class="register--login-field" type="email">
+                    </div>
+
+                    <div class="register--login-password">
+                        <input name="password" placeholder="Your password" autocomplete="current-password" tabindex="2"
+                               id="passwort" class="register--login-field" type="password">
+                    </div>
+
+                    <div class="register--login-action">
+                        <button type="submit" class="register--login-btn btn is--primary is--large is--icon-right"
+                                name="Submit">Login <i class="icon--arrow-right"></i></button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-{% endblock %}
