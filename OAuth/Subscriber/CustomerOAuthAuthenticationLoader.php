@@ -3,8 +3,8 @@
 namespace SwagOAuth\OAuth\Subscriber;
 
 use Shopware\Core\Framework\Context;
-use Shopware\Core\Framework\ORM\Read\ReadCriteria;
-use Shopware\Core\Framework\ORM\RepositoryInterface;
+use Shopware\Core\Framework\DataAbstractionLayer\Read\ReadCriteria;
+use Shopware\Core\Framework\DataAbstractionLayer\RepositoryInterface;
 use Shopware\Core\PlatformRequest;
 use SwagOAuth\OAuth\Data\OAuthAccessTokenStruct;
 use SwagOAuth\OAuth\Exception\InvalidOAuthTokenException;

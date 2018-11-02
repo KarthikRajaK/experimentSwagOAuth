@@ -2,7 +2,7 @@
 
 namespace SwagOAuth\OAuth\Data;
 
-use Shopware\Core\Framework\ORM\Entity;
+use Shopware\Core\Framework\DataAbstractionLayer\Entity;
 use Shopware\Core\System\SalesChannel\SalesChannelStruct;
 
 class OAuthAccessTokenStruct extends Entity
