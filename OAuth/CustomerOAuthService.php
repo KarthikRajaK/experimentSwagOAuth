@@ -5,7 +5,7 @@ namespace SwagOAuth\OAuth;
 use Shopware\Core\Checkout\CheckoutContext;
 use Shopware\Core\Framework\DataAbstractionLayer\RepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\Query\TermQuery;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\Struct\Uuid;
 use Shopware\Core\System\Integration\IntegrationCollection;
 use Shopware\Core\System\Integration\IntegrationDefinition;
@@ -119,7 +119,7 @@ class CustomerOAuthService
     public function getIntegrationByAccessKey(CheckoutContext $checkoutContext, string $accessKey): IntegrationStruct
     {
         $criteria = new Criteria();
-        $criteria->addFilter(new TermQuery(IntegrationDefinition::getEntityName() . '.accessKey', $accessKey));
+        $criteria->addFilter(new EqualsFilter(IntegrationDefinition::getEntityName() . '.accessKey', $accessKey));
 
         /** @var IntegrationCollection $integrations */
         $integrations = $this->integrationRepository->search($criteria, $checkoutContext->getContext());
@@ -166,13 +166,13 @@ class CustomerOAuthService
     ): OAuthAuthorizationCodeStruct {
         $criteria = new Criteria();
         $criteria->addFilter(
-            new TermQuery(
+            new EqualsFilter(
                 OAuthAuthorizationCodeDefinition::ENTITY_NAME . '.' . IntegrationDefinition::getEntityName(
                 ) . '.accessKey', $tokenRequest->getClientId()
             )
         );
         $criteria->addFilter(
-            new TermQuery(
+            new EqualsFilter(
                 OAuthAuthorizationCodeDefinition::ENTITY_NAME . '.authorizationCode', $tokenRequest->getCode()
             )
         );
@@ -245,7 +245,7 @@ class CustomerOAuthService
     ): array {
         $criteria = new Criteria();
         $criteria->addFilter(
-            new TermQuery(
+            new EqualsFilter(
                 OAuthRefreshTokenDefinition::ENTITY_NAME . '.refreshToken', $tokenRequest->getRefreshToken()
             )
         );

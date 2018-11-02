@@ -6,9 +6,8 @@ use PHPUnit\Framework\TestCase;
 use Shopware\Core\Checkout\CheckoutContext;
 use Shopware\Core\Checkout\Test\Cart\Common\Generator;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\Query\MatchQuery;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\Query\NotQuery;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\Query\TermQuery;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\NotFilter;
 use Shopware\Core\Framework\Struct\Uuid;
 use Shopware\Core\Framework\Test\TestCaseBase\AdminApiTestBehaviour;
 use Shopware\Core\Framework\Test\TestCaseBase\StorefrontFunctionalTestBehaviour;
@@ -403,7 +402,7 @@ class OAuthControllerTest extends TestCase
         $repo = $this->getContainer()->get('swag_oauth_authorization_code.repository');
 
         $criteria = new Criteria();
-        $criteria->addFilter(new MatchQuery('swag_oauth_authorization_code.contextToken', $contextToken));
+        $criteria->addFilter(new EqualsFilter('swag_oauth_authorization_code.contextToken', $contextToken));
 
         return $repo->search($criteria, $this->getCheckoutContext()->getContext())->first();
     }
@@ -411,7 +410,7 @@ class OAuthControllerTest extends TestCase
     protected function getSalesChannel(): SalesChannelStruct
     {
         $criteria = new Criteria();
-        $criteria->addFilter(new NotQuery([new TermQuery('sales_channel.accessKey', null)]));
+        $criteria->addFilter(new NotFilter([new EqualsFilter('sales_channel.accessKey', null)]));
         return $this->getContainer()->get('sales_channel.repository')->search($criteria, $this->getCheckoutContext()->getContext())->first();
     }
 
