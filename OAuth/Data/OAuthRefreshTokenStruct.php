@@ -2,7 +2,7 @@
 
 namespace SwagOAuth\OAuth\Data;
 
-use Shopware\Core\Framework\ORM\Entity;
+use Shopware\Core\Framework\DataAbstractionLayer\Entity;
 
 class OAuthRefreshTokenStruct extends Entity
 {

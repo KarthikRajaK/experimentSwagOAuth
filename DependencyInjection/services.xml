@@ -29,35 +29,35 @@
         </service>
 
         <service id="swag_oauth_access_token.repository"
-                 class="Shopware\Core\Framework\ORM\EntityRepository"
+                 class="Shopware\Core\Framework\DataAbstractionLayer\EntityRepository"
                  public="true">
             <argument>SwagOAuth\OAuth\Data\OAuthAccessTokenDefinition</argument>
-            <argument type="service" id="Shopware\Core\Framework\ORM\Read\EntityReaderInterface"/>
-            <argument type="service" id="Shopware\Core\Framework\ORM\VersionManager"/>
-            <argument type="service" id="Shopware\Core\Framework\ORM\Search\EntitySearcherInterface"/>
-            <argument type="service" id="Shopware\Core\Framework\ORM\Search\EntityAggregatorInterface"/>
+            <argument type="service" id="Shopware\Core\Framework\DataAbstractionLayer\Read\EntityReaderInterface"/>
+            <argument type="service" id="Shopware\Core\Framework\DataAbstractionLayer\VersionManager"/>
+            <argument type="service" id="Shopware\Core\Framework\DataAbstractionLayer\Search\EntitySearcherInterface"/>
+            <argument type="service" id="Shopware\Core\Framework\DataAbstractionLayer\Search\EntityAggregatorInterface"/>
             <argument type="service" id="event_dispatcher"/>
         </service>
 
         <service id="swag_oauth_authorization_code.repository"
-                 class="Shopware\Core\Framework\ORM\EntityRepository"
+                 class="Shopware\Core\Framework\DataAbstractionLayer\EntityRepository"
                  public="true">
             <argument>SwagOAuth\OAuth\Data\OAuthAuthorizationCodeDefinition</argument>
-            <argument type="service" id="Shopware\Core\Framework\ORM\Read\EntityReaderInterface"/>
-            <argument type="service" id="Shopware\Core\Framework\ORM\VersionManager"/>
-            <argument type="service" id="Shopware\Core\Framework\ORM\Search\EntitySearcherInterface"/>
-            <argument type="service" id="Shopware\Core\Framework\ORM\Search\EntityAggregatorInterface"/>
+            <argument type="service" id="Shopware\Core\Framework\DataAbstractionLayer\Read\EntityReaderInterface"/>
+            <argument type="service" id="Shopware\Core\Framework\DataAbstractionLayer\VersionManager"/>
+            <argument type="service" id="Shopware\Core\Framework\DataAbstractionLayer\Search\EntitySearcherInterface"/>
+            <argument type="service" id="Shopware\Core\Framework\DataAbstractionLayer\Search\EntityAggregatorInterface"/>
             <argument type="service" id="event_dispatcher"/>
         </service>
 
         <service id="swag_oauth_refresh_token.repository"
-                 class="Shopware\Core\Framework\ORM\EntityRepository"
+                 class="Shopware\Core\Framework\DataAbstractionLayer\EntityRepository"
                  public="true">
             <argument>SwagOAuth\OAuth\Data\OAuthRefreshTokenDefinition</argument>
-            <argument type="service" id="Shopware\Core\Framework\ORM\Read\EntityReaderInterface"/>
-            <argument type="service" id="Shopware\Core\Framework\ORM\VersionManager"/>
-            <argument type="service" id="Shopware\Core\Framework\ORM\Search\EntitySearcherInterface"/>
-            <argument type="service" id="Shopware\Core\Framework\ORM\Search\EntityAggregatorInterface"/>
+            <argument type="service" id="Shopware\Core\Framework\DataAbstractionLayer\Read\EntityReaderInterface"/>
+            <argument type="service" id="Shopware\Core\Framework\DataAbstractionLayer\VersionManager"/>
+            <argument type="service" id="Shopware\Core\Framework\DataAbstractionLayer\Search\EntitySearcherInterface"/>
+            <argument type="service" id="Shopware\Core\Framework\DataAbstractionLayer\Search\EntityAggregatorInterface"/>
             <argument type="service" id="event_dispatcher"/>
         </service>
 
