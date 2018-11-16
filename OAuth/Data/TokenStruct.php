@@ -18,9 +18,6 @@ class TokenStruct extends Struct
     /** @var string */
     protected $accessTokenId;
 
-    /** @var string */
-    protected $tenantId;
-
     /** @var int Unix Timestamp */
     protected $expires;
 
@@ -32,7 +29,6 @@ class TokenStruct extends Struct
         string $token,
         string $contextToken,
         string $accessTokenId,
-        string $tenantId,
         string $xSwAccessKey,
         int $expires
     ) {
@@ -40,7 +36,6 @@ class TokenStruct extends Struct
         $this->token = $token;
         $this->contextToken = $contextToken;
         $this->accessTokenId = $accessTokenId;
-        $this->tenantId = $tenantId;
         $this->xSwAccessKey = $xSwAccessKey;
         $this->expires = $expires;
     }
@@ -63,11 +58,6 @@ class TokenStruct extends Struct
     public function getAccessTokenId(): string
     {
         return $this->accessTokenId;
-    }
-
-    public function getTenantId(): string
-    {
-        return $this->tenantId;
     }
 
     public function getXSwAccessKey(): string

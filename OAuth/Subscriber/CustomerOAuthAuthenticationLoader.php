@@ -92,7 +92,7 @@ class CustomerOAuthAuthenticationLoader implements EventSubscriberInterface
             throw new OAuthInvalidRequestException();
         }
 
-        $context = Context::createDefaultContext($token->getTenantId());
+        $context = Context::createDefaultContext();
         $readCriteria = new ReadCriteria([$token->getAccessTokenId()]);
 
         /** @var OAuthAccessTokenStruct|null $accessToken */

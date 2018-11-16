@@ -9,7 +9,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\Field\IdField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\LongTextField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\ManyToOneAssociationField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\StringField;
-use Shopware\Core\Framework\DataAbstractionLayer\Field\TenantIdField;
+
 use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
 use Shopware\Core\Framework\DataAbstractionLayer\Write\Flag\PrimaryKey;
 use Shopware\Core\Framework\DataAbstractionLayer\Write\Flag\Required;
@@ -33,7 +33,7 @@ class OAuthAuthorizationCodeDefinition extends EntityDefinition
     {
         return new FieldCollection(
             [
-                new TenantIdField(),
+
                 (new IdField('id', 'id'))->setFlags(new PrimaryKey(), new Required()),
 
                 (new StringField('authorization_code', 'authorizationCode'))->setFlags(new Required()),

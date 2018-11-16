@@ -43,7 +43,6 @@ class JWTFactory
     {
         $jwtToken = (new Builder())
             ->setIssuer($accessToken->getSalesChannel()->getAccessKey())
-            ->setAudience($context->getTenantId())
             ->setId(Uuid::uuid4()->getHex(), true)
             ->setIssuedAt(time())
             ->setNotBefore(time())
