@@ -11,13 +11,13 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\NotFilter;
 use Shopware\Core\Framework\Struct\Uuid;
 use Shopware\Core\Framework\Test\TestCaseBase\AdminApiTestBehaviour;
 use Shopware\Core\Framework\Test\TestCaseBase\StorefrontFunctionalTestBehaviour;
-use Shopware\Core\System\Integration\IntegrationStruct;
-use Shopware\Core\System\SalesChannel\SalesChannelStruct;
+use Shopware\Core\System\Integration\IntegrationEntity;
+use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 use Shopware\Storefront\Page\Account\AccountService;
 use SwagOAuth\Controller\OAuthController;
 use SwagOAuth\OAuth\CustomerOAuthService;
-use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeStruct;
-use SwagOAuth\OAuth\Data\OAuthRefreshTokenStruct;
+use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeEntity;
+use SwagOAuth\OAuth\Data\OAuthRefreshTokenEntity;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -167,7 +167,7 @@ class OAuthControllerTest extends TestCase
         $authCode = $this->getAuthCodeByContextToken($contextToken);
 
         self::assertNotNull($authCode);
-        self::assertInstanceOf(OAuthAuthorizationCodeStruct::class, $authCode);
+        self::assertInstanceOf(OAuthAuthorizationCodeEntity::class, $authCode);
         self::assertSame($urlParts['code'], $authCode->getAuthorizationCode());
         self::assertLessThanOrEqual((new \DateTime)->modify('+30 second'), $authCode->getExpires());
     }
@@ -397,7 +397,7 @@ class OAuthControllerTest extends TestCase
         self::assertNotNull($responseData['access_token']);
     }
 
-    protected function getAuthCodeByContextToken(string $contextToken): ?OAuthAuthorizationCodeStruct
+    protected function getAuthCodeByContextToken(string $contextToken): ?OAuthAuthorizationCodeEntity
     {
         $repo = $this->getContainer()->get('swag_oauth_authorization_code.repository');
 
@@ -407,20 +407,20 @@ class OAuthControllerTest extends TestCase
         return $repo->search($criteria, $this->getCheckoutContext()->getContext())->first();
     }
 
-    protected function getSalesChannel(): SalesChannelStruct
+    protected function getSalesChannel(): SalesChannelEntity
     {
         $criteria = new Criteria();
         $criteria->addFilter(new NotFilter([new EqualsFilter('sales_channel.accessKey', null)]));
         return $this->getContainer()->get('sales_channel.repository')->search($criteria, $this->getCheckoutContext()->getContext())->first();
     }
 
-    protected function createRefreshToken(IntegrationStruct $integrationStruct): OAuthRefreshTokenStruct
+    protected function createRefreshToken(IntegrationEntity $integrationEntity): OAuthRefreshTokenEntity
     {
-        $refreshToken = new OAuthRefreshTokenStruct();
+        $refreshToken = new OAuthRefreshTokenEntity();
         $refreshToken->setId(Uuid::uuid4()->getHex());
         $refreshToken->setContextToken(Uuid::uuid4()->getHex());
         $refreshToken->setRefreshToken(Uuid::uuid4()->getHex());
-        $refreshToken->setIntegrationId($integrationStruct->getId());
+        $refreshToken->setIntegrationId($integrationEntity->getId());
 
         $this->getContainer()->get('swag_oauth_refresh_token.repository')
             ->create([$refreshToken->jsonSerialize()], $this->getCheckoutContext()->getContext());
@@ -428,9 +428,9 @@ class OAuthControllerTest extends TestCase
         return $refreshToken;
     }
 
-    protected function createIntegration(): IntegrationStruct
+    protected function createIntegration(): IntegrationEntity
     {
-        $integration = new IntegrationStruct();
+        $integration = new IntegrationEntity();
         $integration->setId(Uuid::uuid4()->getHex());
         $integration->setAccessKey('ThisIsAClientID');
         $integration->setSecretAccessKey('Thi$I$A$uper$ecretAcce$$Key');
@@ -446,14 +446,14 @@ class OAuthControllerTest extends TestCase
         return $integration;
     }
 
-    protected function createAuthCode(IntegrationStruct $integrationStruct): OAuthAuthorizationCodeStruct
+    protected function createAuthCode(IntegrationEntity $integrationEntity): OAuthAuthorizationCodeEntity
     {
-        $code = new OAuthAuthorizationCodeStruct();
+        $code = new OAuthAuthorizationCodeEntity();
         $expires = (new \DateTime())->modify('+ ' .CustomerOAuthService::EXPIRE_IN_SECONDS . ' second');
         $data = [
             'id' => Uuid::uuid4()->getHex(),
             'authorizationCode' => Uuid::uuid4()->getHex(),
-            'integrationId' => $integrationStruct->getId(),
+            'integrationId' => $integrationEntity->getId(),
             'expires' => $expires,
             'contextToken' => Uuid::uuid4()->getHex(),
         ];
@@ -466,9 +466,9 @@ class OAuthControllerTest extends TestCase
         return $code;
     }
 
-    protected function getCheckoutContext(?SalesChannelStruct $salesChannelStruct = null): CheckoutContext
+    protected function getCheckoutContext(?SalesChannelEntity $salesChannelEntity = null): CheckoutContext
     {
-        return Generator::createContext(null, null, $salesChannelStruct);
+        return Generator::createContext(null, null, $salesChannelEntity);
     }
 
     public function parseUrl(RedirectResponse $response): array

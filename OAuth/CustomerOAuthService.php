@@ -9,12 +9,12 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\Struct\Uuid;
 use Shopware\Core\System\Integration\IntegrationCollection;
 use Shopware\Core\System\Integration\IntegrationDefinition;
-use Shopware\Core\System\Integration\IntegrationStruct;
-use SwagOAuth\OAuth\Data\OAuthAccessTokenStruct;
+use Shopware\Core\System\Integration\IntegrationEntity;
+use SwagOAuth\OAuth\Data\OAuthAccessTokenEntity;
 use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeDefinition;
-use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeStruct;
+use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeEntity;
 use SwagOAuth\OAuth\Data\OAuthRefreshTokenDefinition;
-use SwagOAuth\OAuth\Data\OAuthRefreshTokenStruct;
+use SwagOAuth\OAuth\Data\OAuthRefreshTokenEntity;
 use SwagOAuth\OAuth\Exception\OAuthException;
 use SwagOAuth\OAuth\Exception\OAuthInvalidClientException;
 use SwagOAuth\OAuth\Exception\OAuthInvalidRequestException;
@@ -56,7 +56,7 @@ class CustomerOAuthService
     }
 
     public function generateRedirectUri(
-        OAuthAuthorizationCodeStruct $authCode,
+        OAuthAuthorizationCodeEntity $authCode,
         AuthorizeRequest $authorizeRequest
     ): string {
         $responseData = [
@@ -76,7 +76,7 @@ class CustomerOAuthService
         CheckoutContext $checkoutContext,
         AuthorizeRequest $authorizeRequest,
         string $contextToken
-    ): OAuthAuthorizationCodeStruct {
+    ): OAuthAuthorizationCodeEntity {
         if (!$authorizeRequest->getIntegrationId()){
             throw new OAuthInvalidRequestException();
         }
@@ -95,7 +95,7 @@ class CustomerOAuthService
 
         $this->oauthAuthCodeRepository->create([$data], $checkoutContext->getContext());
 
-        return (new OAuthAuthorizationCodeStruct())->assign($data);
+        return (new OAuthAuthorizationCodeEntity())->assign($data);
     }
 
     /**
@@ -116,7 +116,7 @@ class CustomerOAuthService
     /**
      * @throws OAuthInvalidClientException
      */
-    public function getIntegrationByAccessKey(CheckoutContext $checkoutContext, string $accessKey): IntegrationStruct
+    public function getIntegrationByAccessKey(CheckoutContext $checkoutContext, string $accessKey): IntegrationEntity
     {
         $criteria = new Criteria();
         $criteria->addFilter(new EqualsFilter(IntegrationDefinition::getEntityName() . '.accessKey', $accessKey));
@@ -124,7 +124,7 @@ class CustomerOAuthService
         /** @var IntegrationCollection $integrations */
         $integrations = $this->integrationRepository->search($criteria, $checkoutContext->getContext());
 
-        /** @var null|IntegrationStruct $integration */
+        /** @var null|IntegrationEntity $integration */
         $integration = $integrations->first();
 
         if (!$integration) {
@@ -163,7 +163,7 @@ class CustomerOAuthService
     public function getAuthCode(
         CheckoutContext $checkoutContext,
         TokenRequest $tokenRequest
-    ): OAuthAuthorizationCodeStruct {
+    ): OAuthAuthorizationCodeEntity {
         $criteria = new Criteria();
         $criteria->addFilter(
             new EqualsFilter(
@@ -178,7 +178,7 @@ class CustomerOAuthService
         );
 
         $authCodes = $this->oauthAuthCodeRepository->search($criteria, $checkoutContext->getContext())->getElements();
-        /** @var OAuthAuthorizationCodeStruct $authCode */
+        /** @var OAuthAuthorizationCodeEntity $authCode */
         $authCode = array_pop($authCodes);
 
         return $authCode;
@@ -186,9 +186,9 @@ class CustomerOAuthService
 
     public function createRefreshToken(
         CheckoutContext $checkoutContext,
-        OAuthAuthorizationCodeStruct $authCode
-    ): OAuthRefreshTokenStruct {
-        $refreshToken = new OAuthRefreshTokenStruct();
+        OAuthAuthorizationCodeEntity $authCode
+    ): OAuthRefreshTokenEntity {
+        $refreshToken = new OAuthRefreshTokenEntity();
         $refreshToken->setId(Uuid::uuid4()->getHex());
         $refreshToken->setRefreshToken(Uuid::uuid4()->getHex());
         $refreshToken->setIntegrationId($authCode->getIntegrationId());
@@ -201,8 +201,8 @@ class CustomerOAuthService
 
     public function linkRefreshTokenAuthCode(
         CheckoutContext $checkoutContext,
-        OAuthAuthorizationCodeStruct $authCode,
-        OAuthRefreshTokenStruct $refreshToken
+        OAuthAuthorizationCodeEntity $authCode,
+        OAuthRefreshTokenEntity $refreshToken
     ): void {
         $data = [
             'id' => $authCode->getId(),
@@ -215,11 +215,11 @@ class CustomerOAuthService
     public function createAccessToken(
         CheckoutContext $checkoutContext,
         string $contextToken
-    ): OAuthAccessTokenStruct {
+    ): OAuthAccessTokenEntity {
         $expires = new \DateTime();
         $expires->modify('+' . self::EXPIRE_IN_SECONDS . ' second');
 
-        $accessToken = new OAuthAccessTokenStruct();
+        $accessToken = new OAuthAccessTokenEntity();
         $accessToken->setId(Uuid::uuid4()->getHex());
         $accessToken->setContextToken($contextToken);
         $accessToken->setSalesChannel($checkoutContext->getSalesChannel());
@@ -250,7 +250,7 @@ class CustomerOAuthService
             )
         );
 
-        /** @var OAuthRefreshTokenStruct $refreshToken */
+        /** @var OAuthRefreshTokenEntity $refreshToken */
         $refreshToken = $this->oauthRefreshTokenRepository->search($criteria, $checkoutContext->getContext())->first();
 
         $accessToken = $this->createAccessToken($checkoutContext, $refreshToken->getContextToken());

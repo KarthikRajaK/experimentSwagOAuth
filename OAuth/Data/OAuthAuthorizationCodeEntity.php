@@ -3,9 +3,9 @@
 namespace SwagOAuth\OAuth\Data;
 
 use Shopware\Core\Framework\DataAbstractionLayer\Entity;
-use Shopware\Core\System\Integration\IntegrationStruct;
+use Shopware\Core\System\Integration\IntegrationEntity;
 
-class OAuthAuthorizationCodeStruct extends Entity
+class OAuthAuthorizationCodeEntity extends Entity
 {
     /** @var string */
     protected $authorizationCode;
@@ -22,10 +22,10 @@ class OAuthAuthorizationCodeStruct extends Entity
     /** @var string|null */
     protected $tokenId;
 
-    /** @var OAuthRefreshTokenStruct|null */
+    /** @var OAuthRefreshTokenEntity|null */
     protected $token;
 
-    /** @var IntegrationStruct|null */
+    /** @var IntegrationEntity|null */
     protected $integration;
 
     /** @var string */
@@ -81,22 +81,22 @@ class OAuthAuthorizationCodeStruct extends Entity
         $this->redirectUri = $redirectUri;
     }
 
-    public function getToken(): ?OAuthRefreshTokenStruct
+    public function getToken(): ?OAuthRefreshTokenEntity
     {
         return $this->token;
     }
 
-    public function setToken(?OAuthRefreshTokenStruct $token): void
+    public function setToken(?OAuthRefreshTokenEntity $token): void
     {
         $this->token = $token;
     }
 
-    public function getIntegration(): ?IntegrationStruct
+    public function getIntegration(): ?IntegrationEntity
     {
         return $this->integration;
     }
 
-    public function setIntegration(?IntegrationStruct $client): void
+    public function setIntegration(?IntegrationEntity $client): void
     {
         $this->integration = $client;
     }

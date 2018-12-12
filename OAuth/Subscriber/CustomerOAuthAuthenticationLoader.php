@@ -6,7 +6,7 @@ use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\Read\ReadCriteria;
 use Shopware\Core\Framework\DataAbstractionLayer\RepositoryInterface;
 use Shopware\Core\PlatformRequest;
-use SwagOAuth\OAuth\Data\OAuthAccessTokenStruct;
+use SwagOAuth\OAuth\Data\OAuthAccessTokenEntity;
 use SwagOAuth\OAuth\Exception\InvalidOAuthTokenException;
 use SwagOAuth\OAuth\Exception\OAuthException;
 use SwagOAuth\OAuth\Exception\OAuthInvalidRequestException;
@@ -95,7 +95,7 @@ class CustomerOAuthAuthenticationLoader implements EventSubscriberInterface
         $context = Context::createDefaultContext();
         $readCriteria = new ReadCriteria([$token->getAccessTokenId()]);
 
-        /** @var OAuthAccessTokenStruct|null $accessToken */
+        /** @var OAuthAccessTokenEntity|null $accessToken */
         $accessToken = $this->oauthAccessTokenRepository
             ->read($readCriteria, $context)
             ->get($token->getAccessTokenId());

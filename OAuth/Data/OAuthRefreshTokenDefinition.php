@@ -21,9 +21,9 @@ class OAuthRefreshTokenDefinition extends EntityDefinition
         return self::ENTITY_NAME;
     }
 
-    public static function getStructClass(): string
+    public static function getEntityClass(): string
     {
-        return OAuthRefreshTokenStruct::class;
+        return OAuthRefreshTokenEntity::class;
     }
 
     protected static function defineFields(): FieldCollection
