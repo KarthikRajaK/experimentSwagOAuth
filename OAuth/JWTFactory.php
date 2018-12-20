@@ -47,7 +47,7 @@ class JWTFactory
             ->setIssuedAt(time())
             ->setNotBefore(time())
             ->setExpiration(time() + $expiresInSeconds)
-            ->setSubject($accessToken->getId())
+            ->setSubject($accessToken->getUniqueIdentifier())
             ->set(self::CONTEXT_TOKEN, $accessToken->getContextToken())
             ->sign(new Sha256(), new Key($this->privateKey->getKeyPath(), $this->privateKey->getPassPhrase()))
             ->getToken();
@@ -76,7 +76,6 @@ class JWTFactory
             $jwtToken->getClaim(self::CONTEXT_TOKEN),
             $jwtToken->getClaim(self::SUBJECT),
             $jwtToken->getClaim(self::AUDIENCE),
-            $jwtToken->getClaim(self::ISSUER),
             $jwtToken->getClaim(self::EXPIRATION)
         );
 

@@ -7,7 +7,7 @@
         <service class="SwagOAuth\Controller\OAuthController"
                  id="SwagOAuth\Controller\OAuthController"
                  public="true">
-            <argument type="service" id="Shopware\Storefront\Page\Account\AccountService"/>
+            <argument type="service" id="Shopware\Storefront\Account\Page\AccountService"/>
             <argument type="service" id="SwagOAuth\OAuth\CustomerOAuthService"/>
         </service>
 

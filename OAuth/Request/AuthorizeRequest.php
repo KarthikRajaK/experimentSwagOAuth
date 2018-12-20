@@ -2,7 +2,7 @@
 
 namespace SwagOAuth\OAuth\Request;
 
-use Shopware\Storefront\Page\Account\LoginRequest;
+use Shopware\Storefront\Account\Page\LoginRequest;
 
 class AuthorizeRequest extends LoginRequest
 {
