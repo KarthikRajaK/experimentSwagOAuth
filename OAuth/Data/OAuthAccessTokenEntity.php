@@ -3,9 +3,9 @@
 namespace SwagOAuth\OAuth\Data;
 
 use Shopware\Core\Framework\DataAbstractionLayer\Entity;
-use Shopware\Core\System\SalesChannel\SalesChannelStruct;
+use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 
-class OAuthAccessTokenStruct extends Entity
+class OAuthAccessTokenEntity extends Entity
 {
     /** @var string */
     protected $contextToken;
@@ -16,7 +16,7 @@ class OAuthAccessTokenStruct extends Entity
     /** @var string */
     protected $salesChannelId;
 
-    /** @var SalesChannelStruct */
+    /** @var SalesChannelEntity */
     protected $salesChannel;
 
     /** @var \DateTime */
@@ -52,12 +52,12 @@ class OAuthAccessTokenStruct extends Entity
         $this->salesChannelId = $salesChannelId;
     }
 
-    public function getSalesChannel(): ?SalesChannelStruct
+    public function getSalesChannel(): ?SalesChannelEntity
     {
         return $this->salesChannel;
     }
 
-    public function setSalesChannel(?SalesChannelStruct $salesChannel): void
+    public function setSalesChannel(?SalesChannelEntity $salesChannel): void
     {
         $this->salesChannel = $salesChannel;
     }

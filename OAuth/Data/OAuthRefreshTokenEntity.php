@@ -4,7 +4,7 @@ namespace SwagOAuth\OAuth\Data;
 
 use Shopware\Core\Framework\DataAbstractionLayer\Entity;
 
-class OAuthRefreshTokenStruct extends Entity
+class OAuthRefreshTokenEntity extends Entity
 {
     /** @var string */
     protected $refreshToken;

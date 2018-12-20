@@ -9,7 +9,7 @@ use Lcobucci\JWT\Signer\Key;
 use League\OAuth2\Server\CryptKey;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\Struct\Uuid;
-use SwagOAuth\OAuth\Data\OAuthAccessTokenStruct;
+use SwagOAuth\OAuth\Data\OAuthAccessTokenEntity;
 use SwagOAuth\OAuth\Data\TokenStruct;
 use SwagOAuth\OAuth\Exception\InvalidOAuthTokenException;
 
@@ -39,7 +39,7 @@ class JWTFactory
         $this->privateKey = $privateKey;
     }
 
-    public function generateToken(OAuthAccessTokenStruct $accessToken, Context $context, int $expiresInSeconds): string
+    public function generateToken(OAuthAccessTokenEntity $accessToken, Context $context, int $expiresInSeconds): string
     {
         $jwtToken = (new Builder())
             ->setIssuer($accessToken->getSalesChannel()->getAccessKey())

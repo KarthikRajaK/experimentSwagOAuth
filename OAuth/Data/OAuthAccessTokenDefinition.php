@@ -23,9 +23,9 @@ class OAuthAccessTokenDefinition extends EntityDefinition
         return self::ENTITY_NAME;
     }
 
-    public static function getStructClass(): string
+    public static function getEntityClass(): string
     {
-        return OAuthAccessTokenStruct::class;
+        return OAuthAccessTokenEntity::class;
     }
 
     protected static function defineFields(): FieldCollection

@@ -9,7 +9,6 @@ use Shopware\Core\Framework\DataAbstractionLayer\Field\IdField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\LongTextField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\ManyToOneAssociationField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\StringField;
-
 use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
 use Shopware\Core\Framework\DataAbstractionLayer\Write\Flag\PrimaryKey;
 use Shopware\Core\Framework\DataAbstractionLayer\Write\Flag\Required;
@@ -24,9 +23,9 @@ class OAuthAuthorizationCodeDefinition extends EntityDefinition
         return self::ENTITY_NAME;
     }
 
-    public static function getStructClass(): string
+    public static function getEntityClass(): string
     {
-        return OAuthAuthorizationCodeStruct::class;
+        return OAuthAuthorizationCodeEntity::class;
     }
 
     protected static function defineFields(): FieldCollection
