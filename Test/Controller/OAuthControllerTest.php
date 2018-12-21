@@ -13,7 +13,7 @@ use Shopware\Core\Framework\Test\TestCaseBase\AdminApiTestBehaviour;
 use Shopware\Core\Framework\Test\TestCaseBase\StorefrontFunctionalTestBehaviour;
 use Shopware\Core\System\Integration\IntegrationEntity;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
-use Shopware\Storefront\Page\Account\AccountService;
+use Shopware\Storefront\Account\Page\AccountService;
 use SwagOAuth\Controller\OAuthController;
 use SwagOAuth\OAuth\CustomerOAuthService;
 use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeEntity;
@@ -22,7 +22,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 
 /**
  * @coversDefaultClass \SwagOAuth\Controller\OAuthController
@@ -410,7 +409,7 @@ class OAuthControllerTest extends TestCase
     protected function getSalesChannel(): SalesChannelEntity
     {
         $criteria = new Criteria();
-        $criteria->addFilter(new NotFilter([new EqualsFilter('sales_channel.accessKey', null)]));
+        $criteria->addFilter(new NotFilter(NotFilter::CONNECTION_AND, [new EqualsFilter('sales_channel.accessKey', null)]));
         return $this->getContainer()->get('sales_channel.repository')->search($criteria, $this->getCheckoutContext()->getContext())->first();
     }
 

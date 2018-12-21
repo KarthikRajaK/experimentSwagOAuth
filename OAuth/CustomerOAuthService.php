@@ -189,7 +189,7 @@ class CustomerOAuthService
         OAuthAuthorizationCodeEntity $authCode
     ): OAuthRefreshTokenEntity {
         $refreshToken = new OAuthRefreshTokenEntity();
-        $refreshToken->setId(Uuid::uuid4()->getHex());
+        $refreshToken->setUniqueIdentifier(Uuid::uuid4()->getHex());
         $refreshToken->setRefreshToken(Uuid::uuid4()->getHex());
         $refreshToken->setIntegrationId($authCode->getIntegrationId());
         $refreshToken->setContextToken($authCode->getContextToken());
@@ -205,8 +205,8 @@ class CustomerOAuthService
         OAuthRefreshTokenEntity $refreshToken
     ): void {
         $data = [
-            'id' => $authCode->getId(),
-            'tokenId' => $refreshToken->getId(),
+            'id' => $authCode->getUniqueIdentifier(),
+            'tokenId' => $refreshToken->getUniqueIdentifier(),
         ];
 
         $this->oauthAuthCodeRepository->update([$data], $checkoutContext->getContext());
@@ -220,7 +220,7 @@ class CustomerOAuthService
         $expires->modify('+' . self::EXPIRE_IN_SECONDS . ' second');
 
         $accessToken = new OAuthAccessTokenEntity();
-        $accessToken->setId(Uuid::uuid4()->getHex());
+        $accessToken->setUniqueIdentifier(Uuid::uuid4()->getHex());
         $accessToken->setContextToken($contextToken);
         $accessToken->setSalesChannel($checkoutContext->getSalesChannel());
         $accessToken->setSalesChannelId($checkoutContext->getSalesChannel()->getId());

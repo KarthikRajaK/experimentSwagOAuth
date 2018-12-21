@@ -3,8 +3,9 @@
 namespace SwagOAuth\Controller;
 
 use Shopware\Core\Checkout\CheckoutContext;
-use Shopware\Storefront\Controller\StorefrontController;
-use Shopware\Storefront\Page\Account\AccountService;
+use Shopware\Storefront\Account\Page\AccountService;
+use Shopware\Storefront\Framework\Controller\StorefrontController;
+use Shopware\Storefront\Framework\Exception\BadCredentialsException;
 use SwagOAuth\OAuth\CustomerOAuthService;
 use SwagOAuth\OAuth\Exception\OAuthException;
 use SwagOAuth\OAuth\Exception\OAuthInvalidClientException;
@@ -15,7 +16,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 
 class OAuthController extends StorefrontController
 {
