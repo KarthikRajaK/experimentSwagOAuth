@@ -3,7 +3,7 @@
 namespace SwagOAuth\Controller;
 
 use Shopware\Core\Checkout\CheckoutContext;
-use Shopware\Storefront\Account\Page\AccountService;
+use Shopware\Core\Checkout\Customer\Storefront\AccountService;
 use Shopware\Storefront\Framework\Controller\StorefrontController;
 use Shopware\Storefront\Framework\Exception\BadCredentialsException;
 use SwagOAuth\OAuth\CustomerOAuthService;
