@@ -3,7 +3,8 @@
 namespace SwagOAuth\OAuth;
 
 use Shopware\Core\Checkout\CheckoutContext;
-use Shopware\Core\Framework\DataAbstractionLayer\RepositoryInterface;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
+use Shopware\Core\Framework\DataAbstractionLayer\Exception\InconsistentCriteriaIdsException;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\Struct\Uuid;
@@ -26,26 +27,26 @@ class CustomerOAuthService
 {
     const EXPIRE_IN_SECONDS = 3600;
 
-    /** @var RepositoryInterface */
+    /** @var EntityRepositoryInterface */
     private $integrationRepository;
 
-    /** @var RepositoryInterface */
+    /** @var EntityRepositoryInterface */
     private $oauthAuthCodeRepository;
 
-    /** @var RepositoryInterface */
+    /** @var EntityRepositoryInterface */
     private $oauthRefreshTokenRepository;
 
-    /** @var RepositoryInterface */
+    /** @var EntityRepositoryInterface */
     private $oauthAccessTokenRepository;
 
     /** @var JWTFactory */
     private $JWTFactory;
 
     public function __construct(
-        RepositoryInterface $integrationRepository,
-        RepositoryInterface $oauthAuthCodeRepository,
-        RepositoryInterface $oauthRefreshTokenRepository,
-        RepositoryInterface $oauthAccessTokenRepository,
+        EntityRepositoryInterface $integrationRepository,
+        EntityRepositoryInterface $oauthAuthCodeRepository,
+        EntityRepositoryInterface $oauthRefreshTokenRepository,
+        EntityRepositoryInterface $oauthAccessTokenRepository,
         JWTFactory $JWTFactory
     ) {
         $this->integrationRepository = $integrationRepository;
@@ -115,6 +116,7 @@ class CustomerOAuthService
 
     /**
      * @throws OAuthInvalidClientException
+     * @throws InconsistentCriteriaIdsException
      */
     public function getIntegrationByAccessKey(CheckoutContext $checkoutContext, string $accessKey): IntegrationEntity
     {

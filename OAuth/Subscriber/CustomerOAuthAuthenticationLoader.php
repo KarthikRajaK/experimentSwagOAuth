@@ -3,8 +3,9 @@
 namespace SwagOAuth\OAuth\Subscriber;
 
 use Shopware\Core\Framework\Context;
-use Shopware\Core\Framework\DataAbstractionLayer\Read\ReadCriteria;
-use Shopware\Core\Framework\DataAbstractionLayer\RepositoryInterface;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
+use Shopware\Core\Framework\DataAbstractionLayer\Exception\InconsistentCriteriaIdsException;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\PlatformRequest;
 use SwagOAuth\OAuth\Data\OAuthAccessTokenEntity;
 use SwagOAuth\OAuth\Exception\InvalidOAuthTokenException;
@@ -22,14 +23,14 @@ class CustomerOAuthAuthenticationLoader implements EventSubscriberInterface
     const HEADER_AUTHORIZATION = 'Authorization';
     const ROUTE_PREFIX = '/storefront-api/';
 
-    /** @var RepositoryInterface */
+    /** @var EntityRepositoryInterface */
     private $oauthAccessTokenRepository;
 
     /** @var JWTFactory */
     private $JWTFactory;
 
     public function __construct(
-        RepositoryInterface $oauthAccessTokenRepository,
+        EntityRepositoryInterface $oauthAccessTokenRepository,
         JWTFactory $JWTFactory
     ) {
         $this->oauthAccessTokenRepository = $oauthAccessTokenRepository;
@@ -85,6 +86,7 @@ class CustomerOAuthAuthenticationLoader implements EventSubscriberInterface
 
     /**
      * @throws OAuthInvalidRequestException
+     * @throws InconsistentCriteriaIdsException
      */
     protected function checkValidAccessToken(TokenStruct $token): void
     {
@@ -93,7 +95,7 @@ class CustomerOAuthAuthenticationLoader implements EventSubscriberInterface
         }
 
         $context = Context::createDefaultContext();
-        $readCriteria = new ReadCriteria([$token->getAccessTokenId()]);
+        $readCriteria = new Criteria([$token->getAccessTokenId()]);
 
         /** @var OAuthAccessTokenEntity|null $accessToken */
         $accessToken = $this->oauthAccessTokenRepository
