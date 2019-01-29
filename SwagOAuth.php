@@ -14,14 +14,14 @@ use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 
 class SwagOAuth extends Plugin
 {
-    public function build(ContainerBuilder $container)
+    public function build(ContainerBuilder $container): void
     {
         parent::build($container);
         $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/DependencyInjection/'));
         $loader->load('services.xml');
     }
 
-    public function uninstall(UninstallContext $context)
+    public function uninstall(UninstallContext $context): void
     {
         if ($context->keepUserData()) {
             parent::uninstall($context);
