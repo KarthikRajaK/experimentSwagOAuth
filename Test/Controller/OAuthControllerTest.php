@@ -4,16 +4,18 @@ namespace SwagOAuth\Test\Controller;
 
 use PHPUnit\Framework\TestCase;
 use Shopware\Core\Checkout\CheckoutContext;
+use Shopware\Core\Checkout\Customer\Storefront\AccountService;
+use Shopware\Core\Checkout\Exception\BadCredentialsException;
 use Shopware\Core\Checkout\Test\Cart\Common\Generator;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\NotFilter;
+use Shopware\Core\Framework\Routing\InternalRequest;
 use Shopware\Core\Framework\Struct\Uuid;
 use Shopware\Core\Framework\Test\TestCaseBase\AdminApiTestBehaviour;
 use Shopware\Core\Framework\Test\TestCaseBase\StorefrontFunctionalTestBehaviour;
 use Shopware\Core\System\Integration\IntegrationEntity;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
-use Shopware\Storefront\Account\Page\AccountService;
 use SwagOAuth\Controller\OAuthController;
 use SwagOAuth\OAuth\CustomerOAuthService;
 use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeEntity;
@@ -35,7 +37,7 @@ class OAuthControllerTest extends TestCase
 
     protected $accountService;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->accountService = $this->createMock(AccountService::class);
 
@@ -70,14 +72,17 @@ class OAuthControllerTest extends TestCase
             'client_id' => $integration->getAccessKey(),
             'state' => 'TheStateForCSRF',
         ];
-        $request = new Request($data);
+        $request = new InternalRequest($data);
 
         /** @var JsonResponse $response */
         $response = $this->controller->authorize($request, $this->getCheckoutContext());
         $responseData = $this->getData($response);
-        self::assertArraySubset($data, $responseData);
-        self::assertSame($integration->getId(), $responseData['integrationId']);
-        self::assertSame('@SwagOAuth/frontend/oauth/login.html.twig', $responseData['template']);
+
+        static::assertNull($responseData['username']);
+        static::assertSame($data['state'], $responseData['state']);
+        static::assertSame($data['redirect_uri'], $responseData['redirect_uri']);
+        static::assertSame($integration->getId(), $responseData['integrationId']);
+        static::assertSame('@SwagOAuth/frontend/oauth/login.html.twig', $responseData['template']);
     }
 
     public function testAuthorizeWithoutClientId()
@@ -86,11 +91,12 @@ class OAuthControllerTest extends TestCase
             'redirect_uri' => 'https://shopware.local/redirect_uri',
             'state' => 'TheStateForCSRF',
         ];
-        $request = new Request($data);
+        $request = new InternalRequest($data);
 
         $response = $this->controller->authorize($request, $this->getCheckoutContext());
 
-        self::assertSame(Response::HTTP_PRECONDITION_FAILED, $response->getStatusCode());
+        static::assertSame(Response::HTTP_FOUND, $response->getStatusCode());
+        static::assertInstanceOf(RedirectResponse::class, $response);
     }
 
     public function testAuthorizeWithNotExistingClientId()
@@ -100,23 +106,23 @@ class OAuthControllerTest extends TestCase
             'client_id' => 'NotExistingClientId',
             'state' => 'TheStateForCSRF',
         ];
-        $request = new Request($data);
+        $request = new InternalRequest($data);
 
         /** @var RedirectResponse $response */
         $response = $this->controller->authorize($request, $this->getCheckoutContext());
 
         $query = $this->parseUrl($response);
 
-        self::assertInstanceOf(RedirectResponse::class, $response);
-        self::assertSame(Response::HTTP_FOUND, $response->getStatusCode());
-        self::assertSame($query['error'], 'invalid_client');
-        self::assertSame(
+        static::assertInstanceOf(RedirectResponse::class, $response);
+        static::assertSame(Response::HTTP_FOUND, $response->getStatusCode());
+        static::assertSame($query['error'], 'invalid_client');
+        static::assertSame(
             $query['error_description'],
             'Client authentication failed, such as if the request contains an invalid client ID or secret.'
         );
-        self::assertSame($query['path'], '/redirect_uri');
-        self::assertSame($query['host'], 'shopware.local');
-        self::assertSame($query['scheme'], 'https');
+        static::assertSame($query['path'], '/redirect_uri');
+        static::assertSame($query['host'], 'shopware.local');
+        static::assertSame($query['scheme'], 'https');
     }
 
     public function testAuthorizeWithoutState()
@@ -126,16 +132,17 @@ class OAuthControllerTest extends TestCase
             'redirect_uri' => 'https://shopware.local/redirect_uri',
             'client_id' => $integration->getAccessKey(),
         ];
-        $request = new Request($data);
+        $request = new InternalRequest($data);
 
         /** @var JsonResponse $response */
         $response = $this->controller->authorize($request, $this->getCheckoutContext());
-        self::assertInstanceOf(JsonResponse::class, $response);
+        static::assertInstanceOf(JsonResponse::class, $response);
         $responseData = $this->getData($response);
-        self::assertArraySubset($data, $responseData);
-        self::assertSame($integration->getId(), $responseData['integrationId']);
-        self::assertSame(null, $responseData['state']);
-        self::assertSame('@SwagOAuth/frontend/oauth/login.html.twig', $responseData['template']);
+
+        static::assertSame($data['redirect_uri'], $responseData['redirect_uri']);
+        static::assertSame($integration->getId(), $responseData['integrationId']);
+        static::assertNull($responseData['state']);
+        static::assertSame('@SwagOAuth/frontend/oauth/login.html.twig', $responseData['template']);
     }
 
     public function testCheckAuthorize()
@@ -151,29 +158,29 @@ class OAuthControllerTest extends TestCase
             'redirect_uri' => 'https://shopware.local/redirect_uri',
             'state' => 'TheStateForCSRF',
         ];
-        $request = new Request([], $data);
+        $request = new InternalRequest([], $data);
         /** @var RedirectResponse $response */
         $response = $this->controller->checkAuthorize($request, $this->getCheckoutContext());
-        self::assertInstanceOf(RedirectResponse::class, $response);
+        static::assertInstanceOf(RedirectResponse::class, $response);
 
         $urlParts = $this->parseUrl($response);
 
-        self::assertSame($data['state'], $urlParts['state']);
-        self::assertSame('/redirect_uri', $urlParts['path']);
-        self::assertSame( 'shopware.local', $urlParts['host']);
-        self::assertSame('https', $urlParts['scheme']);
+        static::assertSame($data['state'], $urlParts['state']);
+        static::assertSame('/redirect_uri', $urlParts['path']);
+        static::assertSame( 'shopware.local', $urlParts['host']);
+        static::assertSame('https', $urlParts['scheme']);
 
         $authCode = $this->getAuthCodeByContextToken($contextToken);
 
-        self::assertNotNull($authCode);
-        self::assertInstanceOf(OAuthAuthorizationCodeEntity::class, $authCode);
-        self::assertSame($urlParts['code'], $authCode->getAuthorizationCode());
-        self::assertLessThanOrEqual((new \DateTime)->modify('+30 second'), $authCode->getExpires());
+        static::assertNotNull($authCode);
+        static::assertInstanceOf(OAuthAuthorizationCodeEntity::class, $authCode);
+        static::assertSame($urlParts['code'], $authCode->getAuthorizationCode());
+        static::assertLessThanOrEqual((new \DateTime)->modify('+30 second'), $authCode->getExpires());
     }
 
     public function testCheckAuthorizeBadCredentials()
     {
-        $this->accountService->expects($this->once())->method('login')->willThrowException(new BadCredentialsException('Incorrect'));
+        $this->accountService->expects($this->once())->method('login')->willThrowException(new BadCredentialsException());
 
         $integration = $this->createIntegration();
         $data = [
@@ -185,14 +192,19 @@ class OAuthControllerTest extends TestCase
         ];
 
         /** @var JsonResponse $response */
-        $response = $this->controller->checkAuthorize(new Request([], $data), $this->getCheckoutContext());
+        $response = $this->controller->checkAuthorize(new InternalRequest([], $data), $this->getCheckoutContext());
 
-        self::assertInstanceOf(JsonResponse::class, $response);
+        static::assertInstanceOf(JsonResponse::class, $response);
         $responseData = $this->getData($response);
 
-        self::assertArraySubset($data, $responseData);
-        self::assertSame('Incorrect', $responseData['loginError']);
-        self::assertSame('@SwagOAuth/frontend/oauth/login.html.twig', $responseData['template']);
+        static::assertSame($data['username'], $responseData['username']);
+        static::assertSame($data['redirect_uri'], $responseData['redirect_uri']);
+        static::assertSame($data['state'], $responseData['state']);
+        static::assertSame('@SwagOAuth/frontend/oauth/login.html.twig', $responseData['template']);
+        static::assertSame($integration->getId(), $responseData['integrationId']);
+        static::assertArrayHasKey('loginError', $responseData);
+        static::assertSame('Invalid username and/or password.', $responseData['loginError']);
+        static::assertSame('@SwagOAuth/frontend/oauth/login.html.twig', $responseData['template']);
     }
 
     public function testCheckAuthorizeWithoutIntegrationId()
@@ -209,14 +221,20 @@ class OAuthControllerTest extends TestCase
         ];
 
         /** @var JsonResponse $response */
-        $response = $this->controller->checkAuthorize(new Request([], $data), $this->getCheckoutContext());
+        $response = $this->controller->checkAuthorize(new InternalRequest([], $data), $this->getCheckoutContext());
 
-        self::assertInstanceOf(JsonResponse::class, $response);
+        static::assertInstanceOf(JsonResponse::class, $response);
 
         $responseData = $this->getData($response);
-        self::assertArraySubset($data, $responseData);
-        self::assertStringStartsWith('The request is missing a parameter so the server can’t proceed with the request.', $responseData['loginError']);
-        self::assertSame('@SwagOAuth/frontend/oauth/login.html.twig', $responseData['template']);
+
+        static::assertSame($data['username'], $responseData['username']);
+        static::assertSame($data['redirect_uri'], $responseData['redirect_uri']);
+        static::assertSame($data['state'], $responseData['state']);
+        static::assertSame('@SwagOAuth/frontend/oauth/login.html.twig', $responseData['template']);
+        static::assertNull($responseData['integrationId']);
+        static::assertArrayHasKey('loginError', $responseData);
+        static::assertStringStartsWith('The request is missing a parameter so the server can’t proceed with the request.', $responseData['loginError']);
+        static::assertSame('@SwagOAuth/frontend/oauth/login.html.twig', $responseData['template']);
     }
 
     public function testGenerateTokenAuthCode()
@@ -238,13 +256,13 @@ class OAuthControllerTest extends TestCase
         /** @var JsonResponse $response */
         $response = $this->controller->generateToken($request, $context);
 
-        self::assertInstanceOf(JsonResponse::class, $response);
+        static::assertInstanceOf(JsonResponse::class, $response);
         $responseData = $this->getData($response);
 
-        self::assertNotNull($responseData['token_type']);
-        self::assertNotNull($responseData['expires_in']);
-        self::assertNotNull($responseData['refresh_token']);
-        self::assertNotNull($responseData['access_token']);
+        static::assertNotNull($responseData['token_type']);
+        static::assertNotNull($responseData['expires_in']);
+        static::assertNotNull($responseData['refresh_token']);
+        static::assertNotNull($responseData['access_token']);
     }
 
     public function testGenerateTokenWithoutCode()
@@ -264,11 +282,11 @@ class OAuthControllerTest extends TestCase
         /** @var JsonResponse $response */
         $response = $this->controller->generateToken($request, $context);
 
-        self::assertInstanceOf(JsonResponse::class, $response);
+        static::assertInstanceOf(JsonResponse::class, $response);
         $responseData = $this->getData($response);
 
-        self::assertSame('invalid_request', $responseData['error']);
-        self::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
+        static::assertSame('invalid_request', $responseData['error']);
+        static::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
     public function testGenerateTokenInvalidAuth()
@@ -286,8 +304,8 @@ class OAuthControllerTest extends TestCase
 
         $responseData = $this->getData($response);
 
-        self::assertSame('invalid_client', $responseData['error']);
-        self::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
+        static::assertSame('invalid_client', $responseData['error']);
+        static::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
     public function testGenerateTokenInvalidSecret()
@@ -307,8 +325,8 @@ class OAuthControllerTest extends TestCase
 
         $responseData = $this->getData($response);
 
-        self::assertSame('invalid_client', $responseData['error']);
-        self::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
+        static::assertSame('invalid_client', $responseData['error']);
+        static::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
     public function testGenerateTokenWithoutAuth()
@@ -318,8 +336,8 @@ class OAuthControllerTest extends TestCase
 
         $responseData = $this->getData($response);
 
-        self::assertSame('invalid_client', $responseData['error']);
-        self::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
+        static::assertSame('invalid_client', $responseData['error']);
+        static::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
     public function testGenerateTokenWithoutGrantType()
@@ -338,11 +356,11 @@ class OAuthControllerTest extends TestCase
         /** @var JsonResponse $response */
         $response = $this->controller->generateToken($request, $context);
 
-        self::assertInstanceOf(JsonResponse::class, $response);
+        static::assertInstanceOf(JsonResponse::class, $response);
         $responseData = $this->getData($response);
 
-        self::assertSame('unsupported_grant_type', $responseData['error']);
-        self::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
+        static::assertSame('unsupported_grant_type', $responseData['error']);
+        static::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
     public function testGenerateTokenWitInvalidGrantType()
@@ -362,11 +380,11 @@ class OAuthControllerTest extends TestCase
         /** @var JsonResponse $response */
         $response = $this->controller->generateToken($request, $context);
 
-        self::assertInstanceOf(JsonResponse::class, $response);
+        static::assertInstanceOf(JsonResponse::class, $response);
         $responseData = $this->getData($response);
 
-        self::assertSame('unsupported_grant_type', $responseData['error']);
-        self::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
+        static::assertSame('unsupported_grant_type', $responseData['error']);
+        static::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
     public function testGenerateTokenRefreshToken()
@@ -388,12 +406,12 @@ class OAuthControllerTest extends TestCase
         /** @var JsonResponse $response */
         $response = $this->controller->generateToken($request, $context);
 
-        self::assertInstanceOf(JsonResponse::class, $response);
+        static::assertInstanceOf(JsonResponse::class, $response);
         $responseData = $this->getData($response);
 
-        self::assertNotNull($responseData['token_type']);
-        self::assertNotNull($responseData['expires_in']);
-        self::assertNotNull($responseData['access_token']);
+        static::assertNotNull($responseData['token_type']);
+        static::assertNotNull($responseData['expires_in']);
+        static::assertNotNull($responseData['access_token']);
     }
 
     protected function getAuthCodeByContextToken(string $contextToken): ?OAuthAuthorizationCodeEntity
@@ -416,7 +434,7 @@ class OAuthControllerTest extends TestCase
     protected function createRefreshToken(IntegrationEntity $integrationEntity): OAuthRefreshTokenEntity
     {
         $refreshToken = new OAuthRefreshTokenEntity();
-        $refreshToken->setId(Uuid::uuid4()->getHex());
+        $refreshToken->setUniqueIdentifier(Uuid::uuid4()->getHex());
         $refreshToken->setContextToken(Uuid::uuid4()->getHex());
         $refreshToken->setRefreshToken(Uuid::uuid4()->getHex());
         $refreshToken->setIntegrationId($integrationEntity->getId());
@@ -467,7 +485,7 @@ class OAuthControllerTest extends TestCase
 
     protected function getCheckoutContext(?SalesChannelEntity $salesChannelEntity = null): CheckoutContext
     {
-        return Generator::createContext(null, null, $salesChannelEntity);
+        return Generator::createCheckoutContext(null, null, null, $salesChannelEntity);
     }
 
     public function parseUrl(RedirectResponse $response): array

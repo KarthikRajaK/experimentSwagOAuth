@@ -7,6 +7,7 @@ use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Exception\InconsistentCriteriaIdsException;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
+use Shopware\Core\Framework\Routing\InternalRequest;
 use Shopware\Core\Framework\Struct\Uuid;
 use Shopware\Core\System\Integration\IntegrationCollection;
 use Shopware\Core\System\Integration\IntegrationDefinition;
@@ -20,7 +21,6 @@ use SwagOAuth\OAuth\Exception\OAuthException;
 use SwagOAuth\OAuth\Exception\OAuthInvalidClientException;
 use SwagOAuth\OAuth\Exception\OAuthInvalidRequestException;
 use SwagOAuth\OAuth\Exception\OAuthUnsupportedGrantTypeException;
-use SwagOAuth\OAuth\Request\AuthorizeRequest;
 use SwagOAuth\OAuth\Request\TokenRequest;
 
 class CustomerOAuthService
@@ -58,14 +58,14 @@ class CustomerOAuthService
 
     public function generateRedirectUri(
         OAuthAuthorizationCodeEntity $authCode,
-        AuthorizeRequest $authorizeRequest
+        InternalRequest $authorizeRequest
     ): string {
         $responseData = [
             'code' => $authCode->getAuthorizationCode(),
-            'state' => $authorizeRequest->getState(),
+            'state' => $authorizeRequest->optionalPost('state'),
         ];
 
-        $callbackUrl = sprintf('%s?%s', $authorizeRequest->getRedirectUri(), http_build_query($responseData));
+        $callbackUrl = sprintf('%s?%s', $authorizeRequest->optionalPost('redirect_uri'), http_build_query($responseData));
 
         return $callbackUrl;
     }
@@ -75,10 +75,10 @@ class CustomerOAuthService
      */
     public function createAuthCode(
         CheckoutContext $checkoutContext,
-        AuthorizeRequest $authorizeRequest,
+        InternalRequest $authorizeRequest,
         string $contextToken
     ): OAuthAuthorizationCodeEntity {
-        if (!$authorizeRequest->getIntegrationId()){
+        if (!$authorizeRequest->optionalPost('integrationId')){
             throw new OAuthInvalidRequestException();
         }
 
@@ -89,7 +89,7 @@ class CustomerOAuthService
         $data = [
             'id' => Uuid::uuid4()->getHex(),
             'authorizationCode' => $code,
-            'integrationId' => $authorizeRequest->getIntegrationId(),
+            'integrationId' => $authorizeRequest->requirePost('integrationId'),
             'expires' => $expires,
             'contextToken' => $contextToken,
         ];
@@ -196,7 +196,16 @@ class CustomerOAuthService
         $refreshToken->setIntegrationId($authCode->getIntegrationId());
         $refreshToken->setContextToken($authCode->getContextToken());
 
-        $this->oauthRefreshTokenRepository->create([$refreshToken->jsonSerialize()], $checkoutContext->getContext());
+        $this->oauthRefreshTokenRepository->create(
+            [
+                [
+                    'id' => $refreshToken->getUniqueIdentifier(),
+                    'refreshToken' => $refreshToken->getRefreshToken(),
+                    'integrationId' => $refreshToken->getIntegrationId(),
+                    'contextToken' => $refreshToken->getContextToken(),
+                ],
+            ], $checkoutContext->getContext()
+        );
 
         return $refreshToken;
     }
@@ -236,7 +245,17 @@ class CustomerOAuthService
 
         $accessToken->setAccessToken($accessTokenString);
 
-        $this->oauthAccessTokenRepository->create([$accessToken->jsonSerialize()], $checkoutContext->getContext());
+        $this->oauthAccessTokenRepository->create(
+            [
+                [
+                    'id' => $accessToken->getUniqueIdentifier(),
+                    'contextToken' => $accessToken->getContextToken(),
+                    'salesChannelId' => $accessToken->getSalesChannelId(),
+                    'expires' => $accessToken->getExpires(),
+                    'accessToken' => $accessToken->getAccessToken(),
+                ],
+            ], $checkoutContext->getContext()
+        );
 
         return $accessToken;
     }
@@ -262,6 +281,7 @@ class CustomerOAuthService
             'expires_in' => self::EXPIRE_IN_SECONDS,
             'expires_on' => $accessToken->getExpires()->getTimestamp(),
             'access_token' => $accessToken->getAccessToken(),
+            'refresh_token' => $tokenRequest->getRefreshToken(),
         ];
     }
 

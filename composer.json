@@ -1,7 +1,7 @@
 {
     "name": "swag/o-auth",
     "description": "OAuth plugin for Shopware Playground",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "type": "shopware-plugin",
     "license": "MIT",
     "authors": [
