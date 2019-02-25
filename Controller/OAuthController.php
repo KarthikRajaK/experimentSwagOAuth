@@ -4,12 +4,13 @@ namespace SwagOAuth\Controller;
 
 use Shopware\Core\Checkout\CheckoutContext;
 use Shopware\Core\Checkout\Customer\Storefront\AccountService;
+use Shopware\Core\Checkout\Exception\BadCredentialsException;
+use Shopware\Core\Framework\Exception\MissingParameterException;
+use Shopware\Core\Framework\Routing\InternalRequest;
 use Shopware\Storefront\Framework\Controller\StorefrontController;
-use Shopware\Storefront\Framework\Exception\BadCredentialsException;
 use SwagOAuth\OAuth\CustomerOAuthService;
 use SwagOAuth\OAuth\Exception\OAuthException;
 use SwagOAuth\OAuth\Exception\OAuthInvalidClientException;
-use SwagOAuth\OAuth\Request\AuthorizeRequest;
 use SwagOAuth\OAuth\Request\TokenRequest;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -40,17 +41,20 @@ class OAuthController extends StorefrontController
     /**
      * @Route(path="/customer/oauth/authorize", name="customer.oauth.authorize", methods={"GET"})
      */
-    public function authorize(Request $request, CheckoutContext $checkoutContext): Response
+    public function authorize(InternalRequest $request, CheckoutContext $checkoutContext): Response
     {
-        $authorizeRequest = (new AuthorizeRequest())->assign($request->query->all());
-
         try {
             $integration = $this->customerOAuthService
-                ->getIntegrationByAccessKey($checkoutContext, $authorizeRequest->getClientId());
+                ->getIntegrationByAccessKey($checkoutContext, $request->requireGet('client_id'));
 
-            $authorizeRequest->setIntegrationId($integration->getId());
-        } catch (OAuthInvalidClientException $invalidClientException) {
-            $callbackUrl = $this->buildErrorUrl($authorizeRequest->getRedirectUri(), $invalidClientException);
+            $request->addParam('integrationId', $integration->getId());
+        } catch (OAuthInvalidClientException | MissingParameterException $invalidClientException) {
+            $callbackUrl = $this->buildErrorUrl(
+                (string) $request->optionalGet('redirect_uri', ''), [
+                    'error' => $invalidClientException->getCode(),
+                    'error_description' => $invalidClientException->getMessage(),
+                ]
+            );
 
             return $this->redirect($callbackUrl);
         } catch (\TypeError $error) {
@@ -59,32 +63,40 @@ class OAuthController extends StorefrontController
 
         return $this->renderStorefront(
             '@SwagOAuth/frontend/oauth/login.html.twig',
-            $authorizeRequest->jsonSerialize()
+            [
+                'redirect_uri' => $request->optionalGet('redirect_uri', ''),
+                'integrationId' => $request->getParam('integrationId'),
+                'state' => $request->optionalGet('state'),
+                'username' => $request->optionalGet('username'),
+            ]
         );
     }
 
     /**
      * @Route(path="/customer/oauth/authorize", name="customer.oauth.authorize.check", methods={"POST"})
      */
-    public function checkAuthorize(Request $request, CheckoutContext $checkoutContext): Response
+    public function checkAuthorize(InternalRequest $request, CheckoutContext $checkoutContext): Response
     {
-        $authorizeRequest = (new AuthorizeRequest())->assign($request->request->all());
-
         try {
-            $contextToken = $this->accountService->login($authorizeRequest, $checkoutContext);
+            $contextToken = $this->accountService->login($request, $checkoutContext);
 
-            $authCode = $this->customerOAuthService->createAuthCode($checkoutContext, $authorizeRequest, $contextToken);
+            $authCode = $this->customerOAuthService->createAuthCode($checkoutContext, $request, $contextToken);
         } catch (BadCredentialsException | UnauthorizedHttpException | OAuthException $exception) {
-            $authorizeRequest->setLoginError($exception->getMessage());
-
+            $request->addParam('loginError', $exception->getMessage());
             return $this->renderStorefront(
                 '@SwagOAuth/frontend/oauth/login.html.twig',
-                $authorizeRequest->jsonSerialize()
+                [
+                    'redirect_uri' => $request->optionalPost('redirect_uri', ''),
+                    'integrationId' => $request->optionalPost('integrationId'),
+                    'state' => $request->optionalPost('state'),
+                    'username' => $request->optionalPost('username'),
+                    'loginError' => $request->getParam('loginError')
+                ]
             );
         }
 
         $redirectUri = $this->customerOAuthService
-            ->generateRedirectUri($authCode, $authorizeRequest);
+            ->generateRedirectUri($authCode, $request);
 
         return $this->redirect($redirectUri);
     }
@@ -108,8 +120,8 @@ class OAuthController extends StorefrontController
         return new JsonResponse($data);
     }
 
-    private function buildErrorUrl(string $redirectUrl, OAuthException $authException): string
+    private function buildErrorUrl(string $redirectUrl, array $errorData): string
     {
-        return sprintf('%s?%s', $redirectUrl, http_build_query($authException->getErrorData()));
+        return sprintf('%s?%s', $redirectUrl, http_build_query($errorData));
     }
 }

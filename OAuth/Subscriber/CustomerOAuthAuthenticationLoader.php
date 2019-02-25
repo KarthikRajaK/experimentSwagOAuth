@@ -99,7 +99,7 @@ class CustomerOAuthAuthenticationLoader implements EventSubscriberInterface
 
         /** @var OAuthAccessTokenEntity|null $accessToken */
         $accessToken = $this->oauthAccessTokenRepository
-            ->read($readCriteria, $context)
+            ->search($readCriteria, $context)
             ->get($token->getAccessTokenId());
 
         if (!$accessToken) {

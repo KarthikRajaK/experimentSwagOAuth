@@ -18,7 +18,6 @@ class JWTFactory
     const ID = 'jti';
     const CONTEXT_TOKEN = 'pmi';
     const SUBJECT = 'sub';
-    const AUDIENCE = 'aud';
     const ISSUER = 'iss';
     const EXPIRATION = 'exp';
 
@@ -75,7 +74,7 @@ class JWTFactory
             $token,
             $jwtToken->getClaim(self::CONTEXT_TOKEN),
             $jwtToken->getClaim(self::SUBJECT),
-            $jwtToken->getClaim(self::AUDIENCE),
+            $jwtToken->getClaim(self::ISSUER),
             $jwtToken->getClaim(self::EXPIRATION)
         );
 
