@@ -37,7 +37,7 @@ class OAuthControllerTest extends TestCase
 
     protected $accountService;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         $this->accountService = $this->createMock(AccountService::class);
 
@@ -64,7 +64,7 @@ class OAuthControllerTest extends TestCase
         );
     }
 
-    public function testAuthorizeShowsLogin()
+    public function testAuthorizeShowsLogin(): void
     {
         $integration = $this->createIntegration();
         $data = [
@@ -85,7 +85,7 @@ class OAuthControllerTest extends TestCase
         static::assertSame('@SwagOAuth/frontend/oauth/login.html.twig', $responseData['template']);
     }
 
-    public function testAuthorizeWithoutClientId()
+    public function testAuthorizeWithoutClientId(): void
     {
         $data = [
             'redirect_uri' => 'https://shopware.local/redirect_uri',
@@ -99,7 +99,7 @@ class OAuthControllerTest extends TestCase
         static::assertInstanceOf(RedirectResponse::class, $response);
     }
 
-    public function testAuthorizeWithNotExistingClientId()
+    public function testAuthorizeWithNotExistingClientId(): void
     {
         $data = [
             'redirect_uri' => 'https://shopware.local/redirect_uri',
@@ -125,7 +125,7 @@ class OAuthControllerTest extends TestCase
         static::assertSame($query['scheme'], 'https');
     }
 
-    public function testAuthorizeWithoutState()
+    public function testAuthorizeWithoutState(): void
     {
         $integration = $this->createIntegration();
         $data = [
@@ -145,7 +145,7 @@ class OAuthControllerTest extends TestCase
         static::assertSame('@SwagOAuth/frontend/oauth/login.html.twig', $responseData['template']);
     }
 
-    public function testCheckAuthorize()
+    public function testCheckAuthorize(): void
     {
         $contextToken = Uuid::uuid4()->getHex();
 
@@ -178,7 +178,7 @@ class OAuthControllerTest extends TestCase
         static::assertLessThanOrEqual((new \DateTime)->modify('+30 second'), $authCode->getExpires());
     }
 
-    public function testCheckAuthorizeBadCredentials()
+    public function testCheckAuthorizeBadCredentials(): void
     {
         $this->accountService->expects($this->once())->method('login')->willThrowException(new BadCredentialsException());
 
@@ -207,7 +207,7 @@ class OAuthControllerTest extends TestCase
         static::assertSame('@SwagOAuth/frontend/oauth/login.html.twig', $responseData['template']);
     }
 
-    public function testCheckAuthorizeWithoutIntegrationId()
+    public function testCheckAuthorizeWithoutIntegrationId(): void
     {
         $contextToken = Uuid::uuid4()->getHex();
 
@@ -237,7 +237,7 @@ class OAuthControllerTest extends TestCase
         static::assertSame('@SwagOAuth/frontend/oauth/login.html.twig', $responseData['template']);
     }
 
-    public function testGenerateTokenAuthCode()
+    public function testGenerateTokenAuthCode(): void
     {
         $integration = $this->createIntegration();
         $authCode = $this->createAuthCode($integration);
@@ -265,7 +265,7 @@ class OAuthControllerTest extends TestCase
         static::assertNotNull($responseData['access_token']);
     }
 
-    public function testGenerateTokenWithoutCode()
+    public function testGenerateTokenWithoutCode(): void
     {
         $integration = $this->createIntegration();
         $context = $this->getCheckoutContext($this->getSalesChannel());
@@ -289,7 +289,7 @@ class OAuthControllerTest extends TestCase
         static::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
-    public function testGenerateTokenInvalidAuth()
+    public function testGenerateTokenInvalidAuth(): void
     {
         $request = new Request();
         $request->headers->add(
@@ -329,7 +329,7 @@ class OAuthControllerTest extends TestCase
         static::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
-    public function testGenerateTokenWithoutAuth()
+    public function testGenerateTokenWithoutAuth(): void
     {
         /** @var JsonResponse $response */
         $response = $this->controller->generateToken(new Request(), $this->getCheckoutContext());
@@ -340,7 +340,7 @@ class OAuthControllerTest extends TestCase
         static::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
-    public function testGenerateTokenWithoutGrantType()
+    public function testGenerateTokenWithoutGrantType(): void
     {
         $integration = $this->createIntegration();
         $context = $this->getCheckoutContext($this->getSalesChannel());
@@ -363,7 +363,7 @@ class OAuthControllerTest extends TestCase
         static::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
-    public function testGenerateTokenWitInvalidGrantType()
+    public function testGenerateTokenWitInvalidGrantType(): void
     {
         $integration = $this->createIntegration();
         $context = $this->getCheckoutContext($this->getSalesChannel());
@@ -387,7 +387,7 @@ class OAuthControllerTest extends TestCase
         static::assertSame(Response::HTTP_INTERNAL_SERVER_ERROR, $response->getStatusCode());
     }
 
-    public function testGenerateTokenRefreshToken()
+    public function testGenerateTokenRefreshToken(): void
     {
         $integration = $this->createIntegration();
         $refreshToken = $this->createRefreshToken($integration);
