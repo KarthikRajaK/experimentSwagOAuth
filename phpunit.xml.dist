@@ -2,7 +2,7 @@
 
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/7.1/phpunit.xsd"
-         bootstrap="../../../src/TestBootstrap.php">
+         bootstrap="../../../vendor/shopware/platform/src/Core/TestBootstrap.php">
 
     <php>
         <ini name="error_reporting" value="-1"/>
@@ -23,6 +23,8 @@
             <directory suffix=".php">./</directory>
             <exclude>
                 <directory suffix=".php">./Test</directory>
+                <directory suffix=".php">./Migration</directory>
+                <directory suffix="Definition.php">./</directory>
 
                 <file>SwagOAuth.php</file>
             </exclude>
@@ -30,6 +32,13 @@
     </filter>
 
     <listeners>
-        <listener class="Symfony\Bridge\PhpUnit\SymfonyTestsListener"/>
+        <listener class="Symfony\Bridge\PhpUnit\SymfonyTestsListener">
+            <arguments>
+                <array>
+                    <!-- set this option to 0 to disable the DebugClassLoader integration -->
+                    <element key="debug-class-loader"><integer>0</integer></element>
+                </array>
+            </arguments>
+        </listener>
     </listeners>
 </phpunit>
