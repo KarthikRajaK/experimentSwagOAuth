@@ -16,7 +16,7 @@ class OAuthAuthorizationCodeEntity extends Entity
     /** @var string|null */
     protected $redirectUri;
 
-    /** @var \DateTime */
+    /** @var \DateTimeInterface */
     protected $expires;
 
     /** @var string|null */
@@ -51,12 +51,12 @@ class OAuthAuthorizationCodeEntity extends Entity
         $this->integrationId = $integrationId;
     }
 
-    public function getExpires(): \DateTime
+    public function getExpires(): \DateTimeInterface
     {
         return $this->expires;
     }
 
-    public function setExpires(\DateTime $expires): void
+    public function setExpires(\DateTimeInterface $expires): void
     {
         $this->expires = $expires;
     }

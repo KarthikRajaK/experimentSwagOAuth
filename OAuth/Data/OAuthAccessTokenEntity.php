@@ -19,7 +19,7 @@ class OAuthAccessTokenEntity extends Entity
     /** @var SalesChannelEntity */
     protected $salesChannel;
 
-    /** @var \DateTime */
+    /** @var \DateTimeInterface */
     protected $expires;
 
     public function getContextToken(): string
@@ -62,12 +62,12 @@ class OAuthAccessTokenEntity extends Entity
         $this->salesChannel = $salesChannel;
     }
 
-    public function getExpires(): \DateTime
+    public function getExpires(): \DateTimeInterface
     {
         return $this->expires;
     }
 
-    public function setExpires(\DateTime $expires): void
+    public function setExpires(\DateTimeInterface $expires): void
     {
         $this->expires = $expires;
     }
