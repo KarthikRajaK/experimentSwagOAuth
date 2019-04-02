@@ -4,12 +4,12 @@ namespace SwagOAuth\OAuth\Data;
 
 use Shopware\Core\Framework\DataAbstractionLayer\EntityDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\FkField;
+use Shopware\Core\Framework\DataAbstractionLayer\Field\Flag\PrimaryKey;
+use Shopware\Core\Framework\DataAbstractionLayer\Field\Flag\Required;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\IdField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\StringField;
 
 use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
-use Shopware\Core\Framework\DataAbstractionLayer\Write\Flag\PrimaryKey;
-use Shopware\Core\Framework\DataAbstractionLayer\Write\Flag\Required;
 use Shopware\Core\System\Integration\IntegrationDefinition;
 
 class OAuthRefreshTokenDefinition extends EntityDefinition
@@ -30,15 +30,9 @@ class OAuthRefreshTokenDefinition extends EntityDefinition
     {
         return new FieldCollection(
             [
-
                 (new IdField('id', 'id'))->setFlags(new PrimaryKey(), new Required()),
-
                 (new StringField('refresh_token', 'refreshToken'))->setFlags(new Required()),
-
-                (new FkField('integration_id', 'integrationId', IntegrationDefinition::class))->setFlags(
-                    new Required()
-                ),
-
+                (new FkField('integration_id', 'integrationId', IntegrationDefinition::class))->setFlags(new Required()),
                 (new StringField('context_token', 'contextToken'))->setFlags(new Required()),
             ]
         );

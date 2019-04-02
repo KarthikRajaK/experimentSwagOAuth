@@ -8,7 +8,8 @@ use Shopware\Core\Framework\DataAbstractionLayer\Exception\InconsistentCriteriaI
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\Routing\InternalRequest;
-use Shopware\Core\Framework\Struct\Uuid;
+use Shopware\Core\Framework\Uuid\Uuid;
+use Shopware\Core\Framework\Validation\DataBag\DataBag;
 use Shopware\Core\System\Integration\IntegrationCollection;
 use Shopware\Core\System\Integration\IntegrationDefinition;
 use Shopware\Core\System\Integration\IntegrationEntity;
@@ -58,14 +59,14 @@ class CustomerOAuthService
 
     public function generateRedirectUri(
         OAuthAuthorizationCodeEntity $authCode,
-        InternalRequest $authorizeRequest
+        DataBag $authorizeRequest
     ): string {
         $responseData = [
             'code' => $authCode->getAuthorizationCode(),
-            'state' => $authorizeRequest->optionalPost('state'),
+            'state' => $authorizeRequest->get('state'),
         ];
 
-        $callbackUrl = sprintf('%s?%s', $authorizeRequest->optionalPost('redirect_uri'), http_build_query($responseData));
+        $callbackUrl = sprintf('%s?%s', $authorizeRequest->get('redirect_uri'), http_build_query($responseData));
 
         return $callbackUrl;
     }
@@ -75,21 +76,21 @@ class CustomerOAuthService
      */
     public function createAuthCode(
         CheckoutContext $checkoutContext,
-        InternalRequest $authorizeRequest,
+        DataBag $authorizeRequest,
         string $contextToken
     ): OAuthAuthorizationCodeEntity {
-        if (!$authorizeRequest->optionalPost('integrationId')){
+        if (!$authorizeRequest->get('integrationId')){
             throw new OAuthInvalidRequestException();
         }
 
-        $code = Uuid::uuid4()->getHex();
+        $code = Uuid::randomHex();
 
         $expires = new \DateTime();
         $expires->modify('+30 second');
         $data = [
-            'id' => Uuid::uuid4()->getHex(),
+            'id' => Uuid::randomHex(),
             'authorizationCode' => $code,
-            'integrationId' => $authorizeRequest->requirePost('integrationId'),
+            'integrationId' => $authorizeRequest->get('integrationId'),
             'expires' => $expires,
             'contextToken' => $contextToken,
         ];
@@ -101,6 +102,7 @@ class CustomerOAuthService
 
     /**
      * @throws OAuthInvalidClientException
+     * @throws InconsistentCriteriaIdsException
      */
     public function checkClientValid(TokenRequest $tokenRequest, CheckoutContext $context): void
     {
@@ -191,8 +193,8 @@ class CustomerOAuthService
         OAuthAuthorizationCodeEntity $authCode
     ): OAuthRefreshTokenEntity {
         $refreshToken = new OAuthRefreshTokenEntity();
-        $refreshToken->setUniqueIdentifier(Uuid::uuid4()->getHex());
-        $refreshToken->setRefreshToken(Uuid::uuid4()->getHex());
+        $refreshToken->setUniqueIdentifier(Uuid::randomHex());
+        $refreshToken->setRefreshToken(Uuid::randomHex());
         $refreshToken->setIntegrationId($authCode->getIntegrationId());
         $refreshToken->setContextToken($authCode->getContextToken());
 
@@ -231,7 +233,7 @@ class CustomerOAuthService
         $expires->modify('+' . self::EXPIRE_IN_SECONDS . ' second');
 
         $accessToken = new OAuthAccessTokenEntity();
-        $accessToken->setUniqueIdentifier(Uuid::uuid4()->getHex());
+        $accessToken->setUniqueIdentifier(Uuid::randomHex());
         $accessToken->setContextToken($contextToken);
         $accessToken->setSalesChannel($checkoutContext->getSalesChannel());
         $accessToken->setSalesChannelId($checkoutContext->getSalesChannel()->getId());
@@ -290,7 +292,7 @@ class CustomerOAuthService
      */
     public function createTokenData(CheckoutContext $checkoutContext, TokenRequest $tokenRequest): array {
         if (!$tokenRequest->getGrantType()) {
-            throw new OAuthUnsupportedGrantTypeException();
+            throw new OAuthUnsupportedGrantTypeException('invalid grant type');
         }
 
         switch (true) {
@@ -299,7 +301,7 @@ class CustomerOAuthService
             case $tokenRequest->getGrantType() === 'refresh_token':
                 return $this->generateTokenRefreshToken($checkoutContext, $tokenRequest);
             default:
-                throw new OAuthUnsupportedGrantTypeException();
+                throw new OAuthUnsupportedGrantTypeException('invalid grant type');
         }
     }
 }

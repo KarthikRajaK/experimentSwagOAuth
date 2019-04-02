@@ -5,13 +5,13 @@ namespace SwagOAuth\OAuth\Data;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\DateField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\FkField;
+use Shopware\Core\Framework\DataAbstractionLayer\Field\Flag\PrimaryKey;
+use Shopware\Core\Framework\DataAbstractionLayer\Field\Flag\Required;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\IdField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\LongTextField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\ManyToOneAssociationField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\StringField;
 use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;
-use Shopware\Core\Framework\DataAbstractionLayer\Write\Flag\PrimaryKey;
-use Shopware\Core\Framework\DataAbstractionLayer\Write\Flag\Required;
 use Shopware\Core\System\Integration\IntegrationDefinition;
 
 class OAuthAuthorizationCodeDefinition extends EntityDefinition
@@ -37,9 +37,7 @@ class OAuthAuthorizationCodeDefinition extends EntityDefinition
 
                 (new StringField('authorization_code', 'authorizationCode'))->setFlags(new Required()),
 
-                (new FkField('integration_id', 'integrationId', IntegrationDefinition::class))->setFlags(
-                    new Required()
-                ),
+                (new FkField('integration_id', 'integrationId', IntegrationDefinition::class))->setFlags(new Required()),
 
                 new LongTextField('redirect_uri', 'redirectUri'),
                 (new DateField('expires', 'expires'))->setFlags(new Required()),

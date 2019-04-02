@@ -6,4 +6,8 @@ class OAuthUnsupportedGrantTypeException extends OAuthException
 {
     protected $code = 'unsupported_grant_type';
 
+    public function getErrorCode(): string
+    {
+        return $this->code;
+    }
 }
