@@ -52,7 +52,7 @@ class CustomerOAuthAuthenticationLoader implements EventSubscriberInterface
             $this->checkCustomerOAuthRequest($request);
             $token = $this->extractToken($request);
             $this->checkValidAccessToken($token);
-        } catch (OAuthException $oAuthException) {
+        } catch (OAuthException | InconsistentCriteriaIdsException $oAuthException) {
             return;
         }
 

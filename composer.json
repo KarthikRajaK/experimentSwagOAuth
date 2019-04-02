@@ -13,7 +13,7 @@
         "shopware/platform": "dev-master"
     },
     "extra": {
-        "installer-name": "",
+        "installer-name": "SwagOAuth",
         "copyright": "(c) by shopware AG",
         "label": {
             "de_DE": "OAuth für Endkunden des Playgrounds",

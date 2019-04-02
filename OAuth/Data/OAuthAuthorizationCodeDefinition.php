@@ -37,9 +37,7 @@ class OAuthAuthorizationCodeDefinition extends EntityDefinition
 
                 (new StringField('authorization_code', 'authorizationCode'))->setFlags(new Required()),
 
-                (new FkField('integration_id', 'integrationId', IntegrationDefinition::class))->setFlags(
-                    new Required()
-                ),
+                (new FkField('integration_id', 'integrationId', IntegrationDefinition::class))->setFlags(new Required()),
 
                 new LongTextField('redirect_uri', 'redirectUri'),
                 (new DateField('expires', 'expires'))->setFlags(new Required()),

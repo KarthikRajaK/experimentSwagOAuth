@@ -30,15 +30,9 @@ class OAuthRefreshTokenDefinition extends EntityDefinition
     {
         return new FieldCollection(
             [
-
                 (new IdField('id', 'id'))->setFlags(new PrimaryKey(), new Required()),
-
                 (new StringField('refresh_token', 'refreshToken'))->setFlags(new Required()),
-
-                (new FkField('integration_id', 'integrationId', IntegrationDefinition::class))->setFlags(
-                    new Required()
-                ),
-
+                (new FkField('integration_id', 'integrationId', IntegrationDefinition::class))->setFlags(new Required()),
                 (new StringField('context_token', 'contextToken'))->setFlags(new Required()),
             ]
         );

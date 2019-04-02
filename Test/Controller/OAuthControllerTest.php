@@ -4,16 +4,17 @@ namespace SwagOAuth\Test\Controller;
 
 use PHPUnit\Framework\TestCase;
 use Shopware\Core\Checkout\CheckoutContext;
+use Shopware\Core\Checkout\Customer\Exception\BadCredentialsException;
 use Shopware\Core\Checkout\Customer\Storefront\AccountService;
-use Shopware\Core\Checkout\Exception\BadCredentialsException;
 use Shopware\Core\Checkout\Test\Cart\Common\Generator;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\NotFilter;
 use Shopware\Core\Framework\Routing\InternalRequest;
-use Shopware\Core\Framework\Struct\Uuid;
 use Shopware\Core\Framework\Test\TestCaseBase\AdminApiTestBehaviour;
 use Shopware\Core\Framework\Test\TestCaseBase\StorefrontFunctionalTestBehaviour;
+use Shopware\Core\Framework\Uuid\Uuid;
+use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\Integration\IntegrationEntity;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 use SwagOAuth\Controller\OAuthController;
@@ -115,14 +116,14 @@ class OAuthControllerTest extends TestCase
 
         static::assertInstanceOf(RedirectResponse::class, $response);
         static::assertSame(Response::HTTP_FOUND, $response->getStatusCode());
-        static::assertSame($query['error'], 'invalid_client');
+        static::assertSame('invalid_client', $query['error']);
         static::assertSame(
-            $query['error_description'],
-            'Client authentication failed, such as if the request contains an invalid client ID or secret.'
+            'Client authentication failed, such as if the request contains an invalid client ID or secret.',
+            $query['error_description']
         );
-        static::assertSame($query['path'], '/redirect_uri');
-        static::assertSame($query['host'], 'shopware.local');
-        static::assertSame($query['scheme'], 'https');
+        static::assertSame('/redirect_uri', $query['path']);
+        static::assertSame('shopware.local', $query['host']);
+        static::assertSame('https', $query['scheme']);
     }
 
     public function testAuthorizeWithoutState(): void
@@ -147,9 +148,9 @@ class OAuthControllerTest extends TestCase
 
     public function testCheckAuthorize(): void
     {
-        $contextToken = Uuid::uuid4()->getHex();
+        $contextToken = Uuid::randomHex();
 
-        $this->accountService->expects($this->once())->method('login')->willReturn($contextToken);
+        $this->accountService->expects($this->once())->method('loginWithPassword')->willReturn($contextToken);
         $integration = $this->createIntegration();
         $data = [
             'username' => 'test@example.com',
@@ -158,7 +159,7 @@ class OAuthControllerTest extends TestCase
             'redirect_uri' => 'https://shopware.local/redirect_uri',
             'state' => 'TheStateForCSRF',
         ];
-        $request = new InternalRequest([], $data);
+        $request = new RequestDataBag($data);
         /** @var RedirectResponse $response */
         $response = $this->controller->checkAuthorize($request, $this->getCheckoutContext());
         static::assertInstanceOf(RedirectResponse::class, $response);
@@ -180,7 +181,7 @@ class OAuthControllerTest extends TestCase
 
     public function testCheckAuthorizeBadCredentials(): void
     {
-        $this->accountService->expects($this->once())->method('login')->willThrowException(new BadCredentialsException());
+        $this->accountService->expects($this->once())->method('loginWithPassword')->willThrowException(new BadCredentialsException());
 
         $integration = $this->createIntegration();
         $data = [
@@ -192,7 +193,7 @@ class OAuthControllerTest extends TestCase
         ];
 
         /** @var JsonResponse $response */
-        $response = $this->controller->checkAuthorize(new InternalRequest([], $data), $this->getCheckoutContext());
+        $response = $this->controller->checkAuthorize(new RequestDataBag($data), $this->getCheckoutContext());
 
         static::assertInstanceOf(JsonResponse::class, $response);
         $responseData = $this->getData($response);
@@ -209,9 +210,9 @@ class OAuthControllerTest extends TestCase
 
     public function testCheckAuthorizeWithoutIntegrationId(): void
     {
-        $contextToken = Uuid::uuid4()->getHex();
+        $contextToken = Uuid::randomHex();
 
-        $this->accountService->expects($this->once())->method('login')->willReturn($contextToken);
+        $this->accountService->expects($this->once())->method('loginWithPassword')->willReturn($contextToken);
 
         $data = [
             'username' => 'unknown',
@@ -221,7 +222,7 @@ class OAuthControllerTest extends TestCase
         ];
 
         /** @var JsonResponse $response */
-        $response = $this->controller->checkAuthorize(new InternalRequest([], $data), $this->getCheckoutContext());
+        $response = $this->controller->checkAuthorize(new RequestDataBag($data), $this->getCheckoutContext());
 
         static::assertInstanceOf(JsonResponse::class, $response);
 
@@ -434,9 +435,9 @@ class OAuthControllerTest extends TestCase
     protected function createRefreshToken(IntegrationEntity $integrationEntity): OAuthRefreshTokenEntity
     {
         $refreshToken = new OAuthRefreshTokenEntity();
-        $refreshToken->setUniqueIdentifier(Uuid::uuid4()->getHex());
-        $refreshToken->setContextToken(Uuid::uuid4()->getHex());
-        $refreshToken->setRefreshToken(Uuid::uuid4()->getHex());
+        $refreshToken->setUniqueIdentifier(Uuid::randomHex());
+        $refreshToken->setContextToken(Uuid::randomHex());
+        $refreshToken->setRefreshToken(Uuid::randomHex());
         $refreshToken->setIntegrationId($integrationEntity->getId());
 
         $this->getContainer()->get('swag_oauth_refresh_token.repository')
@@ -448,7 +449,7 @@ class OAuthControllerTest extends TestCase
     protected function createIntegration(): IntegrationEntity
     {
         $integration = new IntegrationEntity();
-        $integration->setId(Uuid::uuid4()->getHex());
+        $integration->setId(Uuid::randomHex());
         $integration->setAccessKey('ThisIsAClientID');
         $integration->setSecretAccessKey('Thi$I$A$uper$ecretAcce$$Key');
         $integration->setLabel('OAuthTest');
@@ -468,11 +469,11 @@ class OAuthControllerTest extends TestCase
         $code = new OAuthAuthorizationCodeEntity();
         $expires = (new \DateTime())->modify('+ ' .CustomerOAuthService::EXPIRE_IN_SECONDS . ' second');
         $data = [
-            'id' => Uuid::uuid4()->getHex(),
-            'authorizationCode' => Uuid::uuid4()->getHex(),
+            'id' => Uuid::randomHex(),
+            'authorizationCode' => Uuid::randomHex(),
             'integrationId' => $integrationEntity->getId(),
             'expires' => $expires,
-            'contextToken' => Uuid::uuid4()->getHex(),
+            'contextToken' => Uuid::randomHex(),
         ];
 
         $code->assign($data);
