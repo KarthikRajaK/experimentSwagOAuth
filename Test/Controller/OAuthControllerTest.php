@@ -3,19 +3,19 @@
 namespace SwagOAuth\Test\Controller;
 
 use PHPUnit\Framework\TestCase;
-use Shopware\Core\Checkout\CheckoutContext;
 use Shopware\Core\Checkout\Customer\Exception\BadCredentialsException;
-use Shopware\Core\Checkout\Customer\Storefront\AccountService;
+use Shopware\Core\Checkout\Customer\SalesChannel\AccountService;
 use Shopware\Core\Checkout\Test\Cart\Common\Generator;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\NotFilter;
 use Shopware\Core\Framework\Routing\InternalRequest;
 use Shopware\Core\Framework\Test\TestCaseBase\AdminApiTestBehaviour;
-use Shopware\Core\Framework\Test\TestCaseBase\StorefrontFunctionalTestBehaviour;
+use Shopware\Core\Framework\Test\TestCaseBase\SalesChannelFunctionalTestBehaviour;
 use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\Integration\IntegrationEntity;
+use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 use SwagOAuth\Controller\OAuthController;
 use SwagOAuth\OAuth\CustomerOAuthService;
@@ -32,7 +32,7 @@ use Symfony\Component\HttpFoundation\Response;
 class OAuthControllerTest extends TestCase
 {
     use AdminApiTestBehaviour,
-        StorefrontFunctionalTestBehaviour;
+        SalesChannelFunctionalTestBehaviour;
 
     protected $controller;
 
@@ -484,9 +484,9 @@ class OAuthControllerTest extends TestCase
         return $code;
     }
 
-    protected function getCheckoutContext(?SalesChannelEntity $salesChannelEntity = null): CheckoutContext
+    protected function getCheckoutContext(?SalesChannelEntity $salesChannelEntity = null): SalesChannelContext
     {
-        return Generator::createCheckoutContext(null, null, null, $salesChannelEntity);
+        return Generator::createSalesChannelContext(null, null, null, $salesChannelEntity);
     }
 
     public function parseUrl(RedirectResponse $response): array
