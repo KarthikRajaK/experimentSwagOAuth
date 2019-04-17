@@ -2,17 +2,16 @@
 
 namespace SwagOAuth\OAuth;
 
-use Shopware\Core\Checkout\CheckoutContext;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Exception\InconsistentCriteriaIdsException;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use Shopware\Core\Framework\Routing\InternalRequest;
 use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\Framework\Validation\DataBag\DataBag;
 use Shopware\Core\System\Integration\IntegrationCollection;
 use Shopware\Core\System\Integration\IntegrationDefinition;
 use Shopware\Core\System\Integration\IntegrationEntity;
+use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use SwagOAuth\OAuth\Data\OAuthAccessTokenEntity;
 use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeDefinition;
 use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeEntity;
@@ -75,7 +74,7 @@ class CustomerOAuthService
      * @throws OAuthInvalidRequestException
      */
     public function createAuthCode(
-        CheckoutContext $checkoutContext,
+        SalesChannelContext $salesChannelContext,
         DataBag $authorizeRequest,
         string $contextToken
     ): OAuthAuthorizationCodeEntity {
@@ -95,7 +94,7 @@ class CustomerOAuthService
             'contextToken' => $contextToken,
         ];
 
-        $this->oauthAuthCodeRepository->create([$data], $checkoutContext->getContext());
+        $this->oauthAuthCodeRepository->create([$data], $salesChannelContext->getContext());
 
         return (new OAuthAuthorizationCodeEntity())->assign($data);
     }
@@ -104,7 +103,7 @@ class CustomerOAuthService
      * @throws OAuthInvalidClientException
      * @throws InconsistentCriteriaIdsException
      */
-    public function checkClientValid(TokenRequest $tokenRequest, CheckoutContext $context): void
+    public function checkClientValid(TokenRequest $tokenRequest, SalesChannelContext $context): void
     {
         if (!$tokenRequest->getClientId() || !$tokenRequest->getClientSecret()) {
             throw new OAuthInvalidClientException();
@@ -120,13 +119,13 @@ class CustomerOAuthService
      * @throws OAuthInvalidClientException
      * @throws InconsistentCriteriaIdsException
      */
-    public function getIntegrationByAccessKey(CheckoutContext $checkoutContext, string $accessKey): IntegrationEntity
+    public function getIntegrationByAccessKey(SalesChannelContext $salesChannelContext, string $accessKey): IntegrationEntity
     {
         $criteria = new Criteria();
         $criteria->addFilter(new EqualsFilter(IntegrationDefinition::getEntityName() . '.accessKey', $accessKey));
 
         /** @var IntegrationCollection $integrations */
-        $integrations = $this->integrationRepository->search($criteria, $checkoutContext->getContext());
+        $integrations = $this->integrationRepository->search($criteria, $salesChannelContext->getContext());
 
         /** @var null|IntegrationEntity $integration */
         $integration = $integrations->first();
@@ -142,18 +141,18 @@ class CustomerOAuthService
      * @throws OAuthInvalidRequestException
      */
     public function generateTokenAuthCode(
-        CheckoutContext $checkoutContext,
+        SalesChannelContext $salesChannelContext,
         TokenRequest $tokenRequest
     ): array {
         if (!$tokenRequest->getCode()) {
             throw new OAuthInvalidRequestException();
         }
 
-        $authCode = $this->getAuthCode($checkoutContext, $tokenRequest);
-        $refreshToken = $this->createRefreshToken($checkoutContext, $authCode);
-        $this->linkRefreshTokenAuthCode($checkoutContext, $authCode, $refreshToken);
+        $authCode = $this->getAuthCode($salesChannelContext, $tokenRequest);
+        $refreshToken = $this->createRefreshToken($salesChannelContext, $authCode);
+        $this->linkRefreshTokenAuthCode($salesChannelContext, $authCode, $refreshToken);
 
-        $accessToken = $this->createAccessToken($checkoutContext, $authCode->getContextToken());
+        $accessToken = $this->createAccessToken($salesChannelContext, $authCode->getContextToken());
 
         return [
             'token_type' => 'Bearer',
@@ -165,7 +164,7 @@ class CustomerOAuthService
     }
 
     public function getAuthCode(
-        CheckoutContext $checkoutContext,
+        SalesChannelContext $salesChannelContext,
         TokenRequest $tokenRequest
     ): OAuthAuthorizationCodeEntity {
         $criteria = new Criteria();
@@ -181,7 +180,7 @@ class CustomerOAuthService
             )
         );
 
-        $authCodes = $this->oauthAuthCodeRepository->search($criteria, $checkoutContext->getContext())->getElements();
+        $authCodes = $this->oauthAuthCodeRepository->search($criteria, $salesChannelContext->getContext())->getElements();
         /** @var OAuthAuthorizationCodeEntity $authCode */
         $authCode = array_pop($authCodes);
 
@@ -189,7 +188,7 @@ class CustomerOAuthService
     }
 
     public function createRefreshToken(
-        CheckoutContext $checkoutContext,
+        SalesChannelContext $salesChannelContext,
         OAuthAuthorizationCodeEntity $authCode
     ): OAuthRefreshTokenEntity {
         $refreshToken = new OAuthRefreshTokenEntity();
@@ -206,14 +205,14 @@ class CustomerOAuthService
                     'integrationId' => $refreshToken->getIntegrationId(),
                     'contextToken' => $refreshToken->getContextToken(),
                 ],
-            ], $checkoutContext->getContext()
+            ], $salesChannelContext->getContext()
         );
 
         return $refreshToken;
     }
 
     public function linkRefreshTokenAuthCode(
-        CheckoutContext $checkoutContext,
+        SalesChannelContext $salesChannelContext,
         OAuthAuthorizationCodeEntity $authCode,
         OAuthRefreshTokenEntity $refreshToken
     ): void {
@@ -222,11 +221,11 @@ class CustomerOAuthService
             'tokenId' => $refreshToken->getUniqueIdentifier(),
         ];
 
-        $this->oauthAuthCodeRepository->update([$data], $checkoutContext->getContext());
+        $this->oauthAuthCodeRepository->update([$data], $salesChannelContext->getContext());
     }
 
     public function createAccessToken(
-        CheckoutContext $checkoutContext,
+        SalesChannelContext $salesChannelContext,
         string $contextToken
     ): OAuthAccessTokenEntity {
         $expires = new \DateTime();
@@ -235,13 +234,13 @@ class CustomerOAuthService
         $accessToken = new OAuthAccessTokenEntity();
         $accessToken->setUniqueIdentifier(Uuid::randomHex());
         $accessToken->setContextToken($contextToken);
-        $accessToken->setSalesChannel($checkoutContext->getSalesChannel());
-        $accessToken->setSalesChannelId($checkoutContext->getSalesChannel()->getId());
+        $accessToken->setSalesChannel($salesChannelContext->getSalesChannel());
+        $accessToken->setSalesChannelId($salesChannelContext->getSalesChannel()->getId());
         $accessToken->setExpires($expires);
 
         $accessTokenString = $this->JWTFactory->generateToken(
             $accessToken,
-            $checkoutContext->getContext(),
+            $salesChannelContext->getContext(),
             self::EXPIRE_IN_SECONDS
         );
 
@@ -256,14 +255,14 @@ class CustomerOAuthService
                     'expires' => $accessToken->getExpires(),
                     'accessToken' => $accessToken->getAccessToken(),
                 ],
-            ], $checkoutContext->getContext()
+            ], $salesChannelContext->getContext()
         );
 
         return $accessToken;
     }
 
     public function generateTokenRefreshToken(
-        CheckoutContext $checkoutContext,
+        SalesChannelContext $salesChannelContext,
         TokenRequest $tokenRequest
     ): array {
         $criteria = new Criteria();
@@ -274,9 +273,9 @@ class CustomerOAuthService
         );
 
         /** @var OAuthRefreshTokenEntity $refreshToken */
-        $refreshToken = $this->oauthRefreshTokenRepository->search($criteria, $checkoutContext->getContext())->first();
+        $refreshToken = $this->oauthRefreshTokenRepository->search($criteria, $salesChannelContext->getContext())->first();
 
-        $accessToken = $this->createAccessToken($checkoutContext, $refreshToken->getContextToken());
+        $accessToken = $this->createAccessToken($salesChannelContext, $refreshToken->getContextToken());
 
         return [
             'token_type' => 'Bearer',
@@ -290,16 +289,16 @@ class CustomerOAuthService
     /**
      * @throws OAuthException
      */
-    public function createTokenData(CheckoutContext $checkoutContext, TokenRequest $tokenRequest): array {
+    public function createTokenData(SalesChannelContext $salesChannelContext, TokenRequest $tokenRequest): array {
         if (!$tokenRequest->getGrantType()) {
             throw new OAuthUnsupportedGrantTypeException('invalid grant type');
         }
 
         switch (true) {
             case $tokenRequest->getGrantType() === 'authorization_code':
-                return $this->generateTokenAuthCode($checkoutContext, $tokenRequest);
+                return $this->generateTokenAuthCode($salesChannelContext, $tokenRequest);
             case $tokenRequest->getGrantType() === 'refresh_token':
-                return $this->generateTokenRefreshToken($checkoutContext, $tokenRequest);
+                return $this->generateTokenRefreshToken($salesChannelContext, $tokenRequest);
             default:
                 throw new OAuthUnsupportedGrantTypeException('invalid grant type');
         }

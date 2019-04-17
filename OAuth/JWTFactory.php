@@ -8,7 +8,7 @@ use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Signer\Key;
 use League\OAuth2\Server\CryptKey;
 use Shopware\Core\Framework\Context;
-use Shopware\Core\Framework\Struct\Uuid;
+use Shopware\Core\Framework\Uuid\Uuid;
 use SwagOAuth\OAuth\Data\OAuthAccessTokenEntity;
 use SwagOAuth\OAuth\Data\TokenStruct;
 use SwagOAuth\OAuth\Exception\InvalidOAuthTokenException;
@@ -42,7 +42,7 @@ class JWTFactory
     {
         $jwtToken = (new Builder())
             ->setIssuer($accessToken->getSalesChannel()->getAccessKey())
-            ->setId(Uuid::uuid4()->getHex(), true)
+            ->setId(Uuid::randomHex(), true)
             ->setIssuedAt(time())
             ->setNotBefore(time())
             ->setExpiration(time() + $expiresInSeconds)
@@ -62,7 +62,7 @@ class JWTFactory
         try {
             $jwtToken = (new Parser())->parse($token);
         } catch (\InvalidArgumentException $e) {
-            throw new InvalidOAuthTokenException($token, 0, $e);
+            throw new InvalidOAuthTokenException($token);
         }
 
         if (!$jwtToken->verify(new Sha256(), $this->privateKey->getKeyPath())) {

@@ -46,8 +46,8 @@ class OAuthAuthorizationCodeDefinition extends EntityDefinition
 
                 (new StringField('context_token', 'contextToken'))->setFlags(new Required()),
 
-                new ManyToOneAssociationField('integration', 'integration_id', IntegrationDefinition::class, true),
-                new ManyToOneAssociationField('token', 'swag_oauth_token_id', OAuthRefreshTokenDefinition::class, false),
+                new ManyToOneAssociationField('integration', 'integration_id', IntegrationDefinition::class),
+                new ManyToOneAssociationField('token', 'swag_oauth_token_id', OAuthRefreshTokenDefinition::class, 'id', false),
             ]
         );
     }

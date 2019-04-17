@@ -2,13 +2,13 @@
 
 namespace SwagOAuth\Controller;
 
-use Shopware\Core\Checkout\CheckoutContext;
-use Shopware\Core\Checkout\Customer\Storefront\AccountService;
 use Shopware\Core\Checkout\Customer\Exception\BadCredentialsException;
+use Shopware\Core\Checkout\Customer\SalesChannel\AccountService;
 use Shopware\Core\Framework\DataAbstractionLayer\Exception\InconsistentCriteriaIdsException;
 use Shopware\Core\Framework\Routing\Exception\MissingRequestParameterException;
 use Shopware\Core\Framework\Routing\InternalRequest;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
+use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Storefront\Framework\Controller\StorefrontController;
 use SwagOAuth\OAuth\CustomerOAuthService;
 use SwagOAuth\OAuth\Exception\OAuthException;
@@ -43,11 +43,11 @@ class OAuthController extends StorefrontController
     /**
      * @Route(path="/customer/oauth/authorize", name="customer.oauth.authorize", methods={"GET"})
      */
-    public function authorize(InternalRequest $request, CheckoutContext $checkoutContext): Response
+    public function authorize(InternalRequest $request, SalesChannelContext $salesChannelContext): Response
     {
         try {
             $integration = $this->customerOAuthService
-                ->getIntegrationByAccessKey($checkoutContext, $request->requireGet('client_id'));
+                ->getIntegrationByAccessKey($salesChannelContext, $request->requireGet('client_id'));
 
             $request->addParam('integrationId', $integration->getId());
         } catch (OAuthInvalidClientException
@@ -79,12 +79,12 @@ class OAuthController extends StorefrontController
     /**
      * @Route(path="/customer/oauth/authorize", name="customer.oauth.authorize.check", methods={"POST"})
      */
-    public function checkAuthorize(RequestDataBag $request, CheckoutContext $checkoutContext): Response
+    public function checkAuthorize(RequestDataBag $request, SalesChannelContext $salesChannelContext): Response
     {
         try {
-            $contextToken = $this->accountService->loginWithPassword($request, $checkoutContext);
+            $contextToken = $this->accountService->loginWithPassword($request, $salesChannelContext);
 
-            $authCode = $this->customerOAuthService->createAuthCode($checkoutContext, $request, $contextToken);
+            $authCode = $this->customerOAuthService->createAuthCode($salesChannelContext, $request, $contextToken);
         } catch (BadCredentialsException | UnauthorizedHttpException | OAuthException $exception) {
             $request->add(['loginError' => $exception->getMessage()]);
             return $this->renderStorefront(
@@ -108,15 +108,15 @@ class OAuthController extends StorefrontController
     /**
      * @Route(path="/customer/oauth/token", name="customer.oauth.generate_token", methods={"POST"})
      */
-    public function generateToken(Request $request, CheckoutContext $checkoutContext): Response
+    public function generateToken(Request $request, SalesChannelContext $salesChannelContext): Response
     {
         $tokenRequest = (new TokenRequest())->assign($request->request->all());
         $tokenRequest->setClientId($request->headers->get('php-auth-user'));
         $tokenRequest->setClientSecret($request->headers->get('php-auth-pw'));
 
         try {
-            $this->customerOAuthService->checkClientValid($tokenRequest, $checkoutContext);
-            $data = $this->customerOAuthService->createTokenData($checkoutContext, $tokenRequest);
+            $this->customerOAuthService->checkClientValid($tokenRequest, $salesChannelContext);
+            $data = $this->customerOAuthService->createTokenData($salesChannelContext, $tokenRequest);
         } catch (OAuthException $authException) {
             return new JsonResponse($authException->getErrorData(), $authException->getStatusCode());
         }
