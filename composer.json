@@ -19,8 +19,8 @@
         "shopware-plugin-class": "SwagOAuth\\SwagOAuth",
         "copyright": "(c) by shopware AG",
         "label": {
-            "de_DE": "OAuth für Endkunden des Playgrounds",
-            "en_GB": "OAuth for customers of playground"
+            "de-DE": "OAuth für Endkunden des Playgrounds",
+            "en-GB": "OAuth for customers of playground"
         }
     },
     "autoload": {
