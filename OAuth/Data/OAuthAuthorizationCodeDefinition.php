@@ -18,17 +18,17 @@ class OAuthAuthorizationCodeDefinition extends EntityDefinition
 {
     const ENTITY_NAME = 'swag_oauth_authorization_code';
 
-    public static function getEntityName(): string
+    public function getEntityName(): string
     {
         return self::ENTITY_NAME;
     }
 
-    public static function getEntityClass(): string
+    public function getEntityClass(): string
     {
         return OAuthAuthorizationCodeEntity::class;
     }
 
-    protected static function defineFields(): FieldCollection
+    protected function defineFields(): FieldCollection
     {
         return new FieldCollection(
             [

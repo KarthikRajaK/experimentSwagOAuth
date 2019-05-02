@@ -16,19 +16,19 @@ use Shopware\Core\System\SalesChannel\SalesChannelDefinition;
 
 class OAuthAccessTokenDefinition extends EntityDefinition
 {
-    const ENTITY_NAME = 'swag_oauth_access_token';
+    private const ENTITY_NAME = 'swag_oauth_access_token';
 
-    public static function getEntityName(): string
+    public function getEntityName(): string
     {
         return self::ENTITY_NAME;
     }
 
-    public static function getEntityClass(): string
+    public function getEntityClass(): string
     {
         return OAuthAccessTokenEntity::class;
     }
 
-    protected static function defineFields(): FieldCollection
+    protected function defineFields(): FieldCollection
     {
         return new FieldCollection(
             [

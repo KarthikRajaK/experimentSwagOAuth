@@ -15,7 +15,6 @@ use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use SwagOAuth\OAuth\Data\OAuthAccessTokenEntity;
 use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeDefinition;
 use SwagOAuth\OAuth\Data\OAuthAuthorizationCodeEntity;
-use SwagOAuth\OAuth\Data\OAuthRefreshTokenDefinition;
 use SwagOAuth\OAuth\Data\OAuthRefreshTokenEntity;
 use SwagOAuth\OAuth\Exception\OAuthException;
 use SwagOAuth\OAuth\Exception\OAuthInvalidClientException;
@@ -42,18 +41,25 @@ class CustomerOAuthService
     /** @var JWTFactory */
     private $JWTFactory;
 
+    /**
+     * @var IntegrationDefinition
+     */
+    private $integrationDefinition;
+
     public function __construct(
         EntityRepositoryInterface $integrationRepository,
         EntityRepositoryInterface $oauthAuthCodeRepository,
         EntityRepositoryInterface $oauthRefreshTokenRepository,
         EntityRepositoryInterface $oauthAccessTokenRepository,
-        JWTFactory $JWTFactory
+        JWTFactory $JWTFactory,
+        IntegrationDefinition $integrationDefinition
     ) {
         $this->integrationRepository = $integrationRepository;
         $this->oauthAuthCodeRepository = $oauthAuthCodeRepository;
         $this->oauthRefreshTokenRepository = $oauthRefreshTokenRepository;
         $this->oauthAccessTokenRepository = $oauthAccessTokenRepository;
         $this->JWTFactory = $JWTFactory;
+        $this->integrationDefinition = $integrationDefinition;
     }
 
     public function generateRedirectUri(
@@ -122,7 +128,7 @@ class CustomerOAuthService
     public function getIntegrationByAccessKey(SalesChannelContext $salesChannelContext, string $accessKey): IntegrationEntity
     {
         $criteria = new Criteria();
-        $criteria->addFilter(new EqualsFilter(IntegrationDefinition::getEntityName() . '.accessKey', $accessKey));
+        $criteria->addFilter(new EqualsFilter($this->integrationDefinition->getEntityName() . '.accessKey', $accessKey));
 
         /** @var IntegrationCollection $integrations */
         $integrations = $this->integrationRepository->search($criteria, $salesChannelContext->getContext());
@@ -170,13 +176,13 @@ class CustomerOAuthService
         $criteria = new Criteria();
         $criteria->addFilter(
             new EqualsFilter(
-                OAuthAuthorizationCodeDefinition::ENTITY_NAME . '.' . IntegrationDefinition::getEntityName(
-                ) . '.accessKey', $tokenRequest->getClientId()
+                OAuthAuthorizationCodeDefinition::ENTITY_NAME . '.' . $this->integrationDefinition->getEntityName()
+                . '.accessKey', $tokenRequest->getClientId()
             )
         );
         $criteria->addFilter(
             new EqualsFilter(
-                OAuthAuthorizationCodeDefinition::ENTITY_NAME . '.authorizationCode', $tokenRequest->getCode()
+                'authorizationCode', $tokenRequest->getCode()
             )
         );
 
@@ -268,7 +274,7 @@ class CustomerOAuthService
         $criteria = new Criteria();
         $criteria->addFilter(
             new EqualsFilter(
-                OAuthRefreshTokenDefinition::ENTITY_NAME . '.refreshToken', $tokenRequest->getRefreshToken()
+                'refreshToken', $tokenRequest->getRefreshToken()
             )
         );
 
