@@ -6,7 +6,6 @@ use Shopware\Core\Checkout\Customer\Exception\BadCredentialsException;
 use Shopware\Core\Checkout\Customer\SalesChannel\AccountService;
 use Shopware\Core\Framework\DataAbstractionLayer\Exception\InconsistentCriteriaIdsException;
 use Shopware\Core\Framework\Routing\Exception\MissingRequestParameterException;
-use Shopware\Core\Framework\Routing\InternalRequest;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Storefront\Framework\Controller\StorefrontController;
@@ -43,18 +42,21 @@ class OAuthController extends StorefrontController
     /**
      * @Route(path="/customer/oauth/authorize", name="customer.oauth.authorize", methods={"GET"})
      */
-    public function authorize(InternalRequest $request, SalesChannelContext $salesChannelContext): Response
+    public function authorize(RequestDataBag $request, SalesChannelContext $salesChannelContext): Response
     {
         try {
-            $integration = $this->customerOAuthService
-                ->getIntegrationByAccessKey($salesChannelContext, $request->requireGet('client_id'));
+            if ($request->get('client_id') === null) {
+                throw new MissingRequestParameterException('client_id');
+            }
 
-            $request->addParam('integrationId', $integration->getId());
+            $integration = $this->customerOAuthService
+                ->getIntegrationByAccessKey($salesChannelContext, $request->get('client_id'));
+            $request->set('integrationId', $integration->getId());
         } catch (OAuthInvalidClientException
         | InconsistentCriteriaIdsException
         | MissingRequestParameterException $invalidClientException) {
             $callbackUrl = $this->buildErrorUrl(
-                (string) $request->optionalGet('redirect_uri', ''), [
+                (string) $request->get('redirect_uri', ''), [
                     'error' => $invalidClientException->getCode(),
                     'error_description' => $invalidClientException->getMessage(),
                 ]
@@ -68,10 +70,10 @@ class OAuthController extends StorefrontController
         return $this->renderStorefront(
             '@SwagOAuth/frontend/oauth/login.html.twig',
             [
-                'redirect_uri' => $request->optionalGet('redirect_uri', ''),
-                'integrationId' => $request->getParam('integrationId'),
-                'state' => $request->optionalGet('state'),
-                'username' => $request->optionalGet('username'),
+                'redirect_uri' => $request->get('redirect_uri', ''),
+                'integrationId' => $request->get('integrationId'),
+                'state' => $request->get('state'),
+                'username' => $request->get('username'),
             ]
         );
     }

@@ -9,7 +9,6 @@ use Shopware\Core\Checkout\Test\Cart\Common\Generator;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\NotFilter;
-use Shopware\Core\Framework\Routing\InternalRequest;
 use Shopware\Core\Framework\Test\TestCaseBase\AdminApiTestBehaviour;
 use Shopware\Core\Framework\Test\TestCaseBase\SalesChannelFunctionalTestBehaviour;
 use Shopware\Core\Framework\Uuid\Uuid;
@@ -73,7 +72,7 @@ class OAuthControllerTest extends TestCase
             'client_id' => $integration->getAccessKey(),
             'state' => 'TheStateForCSRF',
         ];
-        $request = new InternalRequest($data);
+        $request = new RequestDataBag($data);
 
         /** @var JsonResponse $response */
         $response = $this->controller->authorize($request, $this->getCheckoutContext());
@@ -92,7 +91,7 @@ class OAuthControllerTest extends TestCase
             'redirect_uri' => 'https://shopware.local/redirect_uri',
             'state' => 'TheStateForCSRF',
         ];
-        $request = new InternalRequest($data);
+        $request = new RequestDataBag($data);
 
         $response = $this->controller->authorize($request, $this->getCheckoutContext());
 
@@ -107,7 +106,7 @@ class OAuthControllerTest extends TestCase
             'client_id' => 'NotExistingClientId',
             'state' => 'TheStateForCSRF',
         ];
-        $request = new InternalRequest($data);
+        $request = new RequestDataBag($data);
 
         /** @var RedirectResponse $response */
         $response = $this->controller->authorize($request, $this->getCheckoutContext());
@@ -133,7 +132,7 @@ class OAuthControllerTest extends TestCase
             'redirect_uri' => 'https://shopware.local/redirect_uri',
             'client_id' => $integration->getAccessKey(),
         ];
-        $request = new InternalRequest($data);
+        $request = new RequestDataBag($data);
 
         /** @var JsonResponse $response */
         $response = $this->controller->authorize($request, $this->getCheckoutContext());

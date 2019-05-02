@@ -14,19 +14,19 @@ use Shopware\Core\System\Integration\IntegrationDefinition;
 
 class OAuthRefreshTokenDefinition extends EntityDefinition
 {
-    const ENTITY_NAME = 'swag_oauth_refresh_token';
+    private const ENTITY_NAME = 'swag_oauth_refresh_token';
 
-    public static function getEntityName(): string
+    public function getEntityName(): string
     {
         return self::ENTITY_NAME;
     }
 
-    public static function getEntityClass(): string
+    public function getEntityClass(): string
     {
         return OAuthRefreshTokenEntity::class;
     }
 
-    protected static function defineFields(): FieldCollection
+    protected function defineFields(): FieldCollection
     {
         return new FieldCollection(
             [
